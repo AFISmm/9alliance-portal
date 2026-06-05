@@ -208,12 +208,15 @@ def render_auth():
                     pre_authorized=None,
                     captcha=False,
                     fields={
-                        "Form name": "Crear cuenta",
-                        "Email": "Correo electrónico",
-                        "Username": "Nombre de usuario",
-                        "Password": "Contraseña (mín. 8 caracteres)",
+                        "Form name":       "Crear cuenta",
+                        "First name":      "Nombre",
+                        "Last name":       "Apellido",
+                        "Email":           "Correo electrónico",
+                        "Username":        "Nombre de usuario",
+                        "Password":        "Contraseña (mín. 8 caracteres)",
                         "Repeat password": "Confirmar contraseña",
-                        "Register": "Registrarse",
+                        "Password hint":   "Pista de contraseña (opcional)",
+                        "Register":        "Registrarse",
                     },
                 )
                 if email_registered:
