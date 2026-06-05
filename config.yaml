@@ -1,12 +1,20 @@
+cookie:
+  expiry_days: 30
+  key: 9alliance-portal-secret-key-cambiar-en-produccion
+  name: 9alliance_session
 credentials:
   usernames:
     admin9alliance:
       email: admin@9alliance.test
       name: Administrador
       password: $2b$12$T1QpEQcOfXGh43dBuzOwFOcRm6.AIlz/c/iYdbzFPh4YcudSVIJzq
-cookie:
-  expiry_days: 30
-  key: 9alliance-portal-secret-key-cambiar-en-produccion
-  name: 9alliance_session
+    felipeserna:
+      email: felipe@illidge.net
+      first_name: Felipe
+      last_name: Illidge
+      logged_in: false
+      password: $2b$12$AA2PG/bc5AVQ3KJ9zrrcvuqOXxqmyWrlr2ggnAkp44vUV5WBxSNLu
+      password_hint: USA
+      roles: null
 preauthorized:
   emails: []
