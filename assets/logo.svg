@@ -1,14 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
-  <rect width="200" height="60" fill="none"/>
-  <!-- Monogram circle -->
-  <circle cx="30" cy="30" r="26" fill="#1B2A4A"/>
-  <text x="30" y="37" font-family="Georgia, serif" font-size="22" font-weight="bold"
-        fill="#C9A84C" text-anchor="middle">9A</text>
-  <!-- Firm name -->
-  <text x="64" y="24" font-family="Georgia, serif" font-size="16" font-weight="bold"
-        fill="#1B2A4A">9 Alliance</text>
-  <text x="64" y="42" font-family="Georgia, serif" font-size="9" letter-spacing="2"
-        fill="#6B7280">ABOGADOS</text>
-  <!-- Separator line -->
-  <line x1="60" y1="28" x2="60" y2="28" stroke="#C9A84C" stroke-width="0"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280">
+  <!-- Fondo circular oscuro -->
+  <circle cx="140" cy="140" r="138" fill="#232120"/>
+  <!-- Anillo crema -->
+  <circle cx="140" cy="140" r="120" fill="none" stroke="#EDE8DC" stroke-width="4.5"/>
+  <!-- "9" crema -->
+  <text
+    x="105" y="193"
+    font-family="'Times New Roman', 'Book Antiqua', Georgia, serif"
+    font-size="162"
+    font-style="italic"
+    font-weight="400"
+    fill="#EDE8DC"
+    text-anchor="middle">9</text>
+  <!-- "A" crema -->
+  <text
+    x="183" y="191"
+    font-family="'Times New Roman', 'Book Antiqua', Georgia, serif"
+    font-size="132"
+    font-style="italic"
+    font-weight="400"
+    fill="#EDE8DC"
+    text-anchor="middle">A</text>
 </svg>

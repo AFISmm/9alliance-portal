@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
 
@@ -12,6 +12,10 @@ class Client:
     telefono: str
     sector: str
     ultimo_digito_nit: str
+    obligaciones: List[str] = field(
+        default_factory=lambda: ["renta_pj", "iva_bimestral", "retencion", "pila"]
+    )
+    notas: str = ""
 
 
 CLIENTS: List[Client] = [
@@ -24,6 +28,7 @@ CLIENTS: List[Client] = [
         telefono="(601) 745 1102",
         sector="Comercio",
         ultimo_digito_nit="3",
+        obligaciones=["renta_pj", "iva_bimestral", "retencion", "pila"],
     ),
     Client(
         id="c002",
@@ -34,6 +39,7 @@ CLIENTS: List[Client] = [
         telefono="(601) 612 8890",
         sector="Transporte",
         ultimo_digito_nit="1",
+        obligaciones=["renta_pj", "retencion", "pila"],
     ),
     Client(
         id="c003",
@@ -44,6 +50,7 @@ CLIENTS: List[Client] = [
         telefono="(604) 388 2274",
         sector="Servicios",
         ultimo_digito_nit="0",
+        obligaciones=["renta_pj", "iva_bimestral", "retencion", "pila"],
     ),
     Client(
         id="c004",
@@ -54,6 +61,7 @@ CLIENTS: List[Client] = [
         telefono="(602) 555 4417",
         sector="Alimentos",
         ultimo_digito_nit="7",
+        obligaciones=["renta_pj", "iva_bimestral", "retencion", "pila"],
     ),
     Client(
         id="c005",
@@ -64,5 +72,8 @@ CLIENTS: List[Client] = [
         telefono="(601) 901 3360",
         sector="Tecnología",
         ultimo_digito_nit="9",
+        obligaciones=["renta_pj", "iva_bimestral", "retencion", "pila"],
     ),
 ]
+
+CLIENTS_MAP: dict = {c.id: c for c in CLIENTS}
