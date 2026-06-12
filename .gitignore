@@ -17,11 +17,5 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Development scripts y screenshots
-snap*.py
-inspect*.py
-screenshot*.png
-*.png
-indicadores.png
-portal_main.png
-logo_*.png
+# Herramientas de desarrollo (no se despliegan)
+dev/
