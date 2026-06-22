@@ -22,7 +22,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-#root { display: flex; min-height: 100vh; }
+#root { min-height: 100vh; display: flex; flex-direction: column; }
 
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }

@@ -32,7 +32,7 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-navy-900 px-4">
+    <div className="flex-1 flex flex-col items-center justify-center bg-navy-900 px-4 min-h-screen">
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-8">
           <Logo9A size={100} />
