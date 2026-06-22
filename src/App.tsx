@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import CalendarPage from './pages/CalendarPage';
+import ClientesExternos from './pages/ClientesExternos';
 import ClientDetail from './pages/ClientDetail';
 import Calculadoras from './pages/Calculadoras';
 import Indicadores from './pages/Indicadores';
@@ -27,6 +28,7 @@ export default function App() {
           >
             <Route index element={<Home />} />
             <Route path="calendario" element={<CalendarPage />} />
+            <Route path="clientes" element={<ClientesExternos />} />
             <Route path="cliente/:id" element={<ClientDetail />} />
             <Route path="calculadoras" element={<Calculadoras />} />
             <Route path="indicadores" element={<Indicadores />} />

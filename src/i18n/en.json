@@ -1,10 +1,10 @@
 {
   "nav": {
     "inicio": "Home",
-    "calendario": "Calendar",
+    "calendario": "Tax calendar",
+    "clientesExternos": "External clients",
     "calculadoras": "Calculators",
     "indicadores": "Indicators",
-    "clientesExternos": "External clients",
     "cerrarSesion": "Sign out"
   },
   "auth": {
@@ -55,6 +55,13 @@
     "presentado": "Filed",
     "vencido": "Overdue"
   },
+  "clientes": {
+    "seleccionar": "Select client",
+    "placeholder": "— Select a client —",
+    "verDetalle": "View full profile →",
+    "sin": "Select a client from the dropdown to view their profile.",
+    "obligaciones": "Tax obligations"
+  },
   "cliente": {
     "titulo": "Client profile",
     "razonSocial": "Legal name",
@@ -73,7 +80,9 @@
     "sinVencimientos": "No deadlines from the start date"
   },
   "calculadoras": {
-    "titulo": "Tax calculators",
+    "titulo": "Calculators",
+    "tributaria": "Tax Calculator",
+    "nominaLabel": "Payroll Calculator",
     "retRenta": "Income tax withholding",
     "retIva": "VAT withholding",
     "retIca": "ICA withholding",
@@ -87,6 +96,24 @@
     "copiado": "Copied!",
     "seleccionaConcepto": "Select a concept",
     "advertencia": "Verify against current 2026 regulations"
+  },
+  "nomina": {
+    "titulo": "Payroll Calculator",
+    "fechaInicio": "Period start date",
+    "fechaFin": "Period end date",
+    "diasDevengados": "Days earned",
+    "salarioBase": "Base salary",
+    "pctSalud": "% Health deduction",
+    "valorSalud": "Health deduction amount",
+    "pctPension": "% Pension deduction",
+    "valorPension": "Pension deduction amount",
+    "totalDeducciones": "Total deductions",
+    "netoAPagar": "Net pay",
+    "limpiar": "Clear",
+    "copiarResumen": "Copy summary",
+    "copiado": "Copied!",
+    "bloqueado": "Calculated automatically",
+    "advertencia": "This is an informational calculation. Verify applicable deductions with your accountant."
   },
   "indicadores": {
     "titulo": "Tax indicators 2026",

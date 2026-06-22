@@ -1,10 +1,10 @@
 {
   "nav": {
     "inicio": "Inicio",
-    "calendario": "Calendario",
+    "calendario": "Calendario tributario",
+    "clientesExternos": "Clientes externos",
     "calculadoras": "Calculadoras",
     "indicadores": "Indicadores",
-    "clientesExternos": "Clientes externos",
     "cerrarSesion": "Cerrar sesión"
   },
   "auth": {
@@ -55,6 +55,13 @@
     "presentado": "Presentado",
     "vencido": "Vencido"
   },
+  "clientes": {
+    "seleccionar": "Seleccionar cliente",
+    "placeholder": "— Selecciona un cliente —",
+    "verDetalle": "Ver detalle completo →",
+    "sin": "Selecciona un cliente del desplegable para ver su ficha.",
+    "obligaciones": "Obligaciones tributarias"
+  },
   "cliente": {
     "titulo": "Ficha de cliente",
     "razonSocial": "Razón social",
@@ -73,7 +80,9 @@
     "sinVencimientos": "Sin vencimientos a partir de la fecha de inicio"
   },
   "calculadoras": {
-    "titulo": "Calculadoras tributarias",
+    "titulo": "Calculadoras",
+    "tributaria": "Calculadora Tributaria",
+    "nominaLabel": "Calculadora de Nómina",
     "retRenta": "Retención en la fuente — Renta",
     "retIva": "Retención de IVA",
     "retIca": "Retención de ICA",
@@ -87,6 +96,24 @@
     "copiado": "¡Copiado!",
     "seleccionaConcepto": "Selecciona un concepto",
     "advertencia": "Verificar contra norma vigente 2026"
+  },
+  "nomina": {
+    "titulo": "Calculadora de Nómina",
+    "fechaInicio": "Fecha de inicio del período",
+    "fechaFin": "Fecha de fin del período",
+    "diasDevengados": "Días devengados",
+    "salarioBase": "Salario base",
+    "pctSalud": "% Deducción Salud",
+    "valorSalud": "Valor deducción Salud",
+    "pctPension": "% Deducción Pensión",
+    "valorPension": "Valor deducción Pensión",
+    "totalDeducciones": "Total deducciones",
+    "netoAPagar": "Neto a pagar",
+    "limpiar": "Limpiar",
+    "copiarResumen": "Copiar resumen",
+    "copiado": "¡Copiado!",
+    "bloqueado": "Calculado automáticamente",
+    "advertencia": "Este cálculo es informativo. Verifique con su contador los aportes y deducciones aplicables."
   },
   "indicadores": {
     "titulo": "Indicadores fiscales 2026",
