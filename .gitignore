@@ -1,13 +1,14 @@
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-.env
-venv/
-.venv/
+# Dependencias
+node_modules/
 
-# Streamlit
-.streamlit/secrets.toml
+# Build
+dist/
+dist-ssr/
+
+# Entorno (secretos)
+.env
+.env.local
+.env.*.local
 
 # OS
 .DS_Store
@@ -19,3 +20,7 @@ Thumbs.db
 
 # Herramientas de desarrollo (no se despliegan)
 dev/
+
+# Logs
+*.log
+npm-debug.log*

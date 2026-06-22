@@ -1,0 +1,113 @@
+{
+  "nav": {
+    "inicio": "Inicio",
+    "calendario": "Calendario",
+    "calculadoras": "Calculadoras",
+    "indicadores": "Indicadores",
+    "clientesExternos": "Clientes externos",
+    "cerrarSesion": "Cerrar sesión"
+  },
+  "auth": {
+    "iniciarSesion": "Iniciar sesión",
+    "registrarse": "Registrarse",
+    "correo": "Correo electrónico",
+    "contrasena": "Contraseña",
+    "confirmarContrasena": "Confirmar contraseña",
+    "entrar": "Entrar",
+    "crear": "Crear cuenta",
+    "sinCuenta": "¿No tienes cuenta?",
+    "conCuenta": "¿Ya tienes cuenta?",
+    "errorCorreo": "Ingresa un correo válido",
+    "errorContrasena": "Mínimo 8 caracteres",
+    "errorConfirmar": "Las contraseñas no coinciden",
+    "errorCredenciales": "Correo o contraseña incorrectos",
+    "errorCorreoUsado": "Este correo ya está registrado",
+    "portal": "Portal Administrativo"
+  },
+  "home": {
+    "titulo": "Dashboard",
+    "pendientes": "Pendientes",
+    "proximos": "Próximos 7 días",
+    "presentados": "Presentados",
+    "vencidos": "Vencidos",
+    "verCalendario": "Ver calendario",
+    "advertencia": "Advertencia de vencimientos",
+    "advertenciaMensaje": "Tienes {{count}} vencimiento(s) en los próximos 7 días",
+    "cerrar": "Cerrar",
+    "notaLegal": "Las fechas exactas dependen del último dígito (o dos últimos dígitos) del NIT. Verificar siempre contra el calendario oficial DIAN vigente."
+  },
+  "calendario": {
+    "titulo": "Calendario tributario",
+    "filtroCliente": "Cliente",
+    "filtroObligacion": "Obligación",
+    "filtroEstado": "Estado",
+    "todos": "Todos",
+    "vistaCalendario": "Calendario",
+    "vistaCliente": "Por cliente",
+    "anterior": "Anterior",
+    "siguiente": "Siguiente",
+    "sinVencimientos": "Sin vencimientos para este período",
+    "notaFechas": "Las fechas exactas dependen del NIT. Verificar contra el calendario oficial DIAN."
+  },
+  "estado": {
+    "pendiente": "Pendiente",
+    "proximo": "Próximo",
+    "presentado": "Presentado",
+    "vencido": "Vencido"
+  },
+  "cliente": {
+    "titulo": "Ficha de cliente",
+    "razonSocial": "Razón social",
+    "nit": "NIT",
+    "contacto": "Contacto",
+    "email": "Correo",
+    "telefono": "Teléfono",
+    "sector": "Sector",
+    "obligaciones": "Obligaciones asignadas",
+    "vencimientos": "Vencimientos",
+    "notas": "Notas",
+    "fechaPresentacion": "Fecha de presentación",
+    "guardar": "Guardar",
+    "imprimir": "Imprimir",
+    "descargar": "Descargar CSV",
+    "sinVencimientos": "Sin vencimientos a partir de la fecha de inicio"
+  },
+  "calculadoras": {
+    "titulo": "Calculadoras tributarias",
+    "retRenta": "Retención en la fuente — Renta",
+    "retIva": "Retención de IVA",
+    "retIca": "Retención de ICA",
+    "base": "Base gravable",
+    "concepto": "Concepto",
+    "tarifa": "Tarifa (%)",
+    "valorRetener": "Valor a retener",
+    "valorNeto": "Valor neto a pagar",
+    "calcular": "Calcular",
+    "copiar": "Copiar resultado",
+    "copiado": "¡Copiado!",
+    "seleccionaConcepto": "Selecciona un concepto",
+    "advertencia": "Verificar contra norma vigente 2026"
+  },
+  "indicadores": {
+    "titulo": "Indicadores fiscales 2026",
+    "uvt": "Unidad de Valor Tributario (UVT)",
+    "smmlv": "Salario Mínimo Mensual Legal Vigente",
+    "auxTransporte": "Auxilio de Transporte",
+    "tablaRetencion": "Tabla de retención en la fuente",
+    "buscar": "Buscar concepto...",
+    "concepto": "Concepto",
+    "baseMinima": "Base mínima (UVT)",
+    "baseMinimaCol": "Base mínima (COP)",
+    "tarifa": "Tarifa %",
+    "vigencia": "Vigencia",
+    "fuente": "Fuente"
+  },
+  "sidebar": {
+    "buscarCliente": "Buscar cliente...",
+    "sinResultados": "Sin resultados"
+  },
+  "lang": {
+    "cambiarIngles": "Switch to English",
+    "cambiarEspanol": "Cambiar a Español"
+  }
+}

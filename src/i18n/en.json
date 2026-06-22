@@ -1,0 +1,113 @@
+{
+  "nav": {
+    "inicio": "Home",
+    "calendario": "Calendar",
+    "calculadoras": "Calculators",
+    "indicadores": "Indicators",
+    "clientesExternos": "External clients",
+    "cerrarSesion": "Sign out"
+  },
+  "auth": {
+    "iniciarSesion": "Sign in",
+    "registrarse": "Sign up",
+    "correo": "Email address",
+    "contrasena": "Password",
+    "confirmarContrasena": "Confirm password",
+    "entrar": "Sign in",
+    "crear": "Create account",
+    "sinCuenta": "Don't have an account?",
+    "conCuenta": "Already have an account?",
+    "errorCorreo": "Enter a valid email",
+    "errorContrasena": "Minimum 8 characters",
+    "errorConfirmar": "Passwords do not match",
+    "errorCredenciales": "Invalid email or password",
+    "errorCorreoUsado": "This email is already registered",
+    "portal": "Administrative Portal"
+  },
+  "home": {
+    "titulo": "Dashboard",
+    "pendientes": "Pending",
+    "proximos": "Next 7 days",
+    "presentados": "Filed",
+    "vencidos": "Overdue",
+    "verCalendario": "View calendar",
+    "advertencia": "Upcoming deadlines",
+    "advertenciaMensaje": "You have {{count}} deadline(s) in the next 7 days",
+    "cerrar": "Close",
+    "notaLegal": "Exact dates depend on the last digit(s) of the NIT. Always verify against the official DIAN calendar."
+  },
+  "calendario": {
+    "titulo": "Tax calendar",
+    "filtroCliente": "Client",
+    "filtroObligacion": "Obligation",
+    "filtroEstado": "Status",
+    "todos": "All",
+    "vistaCalendario": "Calendar",
+    "vistaCliente": "By client",
+    "anterior": "Previous",
+    "siguiente": "Next",
+    "sinVencimientos": "No deadlines for this period",
+    "notaFechas": "Exact dates depend on the NIT. Verify against the official DIAN calendar."
+  },
+  "estado": {
+    "pendiente": "Pending",
+    "proximo": "Upcoming",
+    "presentado": "Filed",
+    "vencido": "Overdue"
+  },
+  "cliente": {
+    "titulo": "Client profile",
+    "razonSocial": "Legal name",
+    "nit": "Tax ID (NIT)",
+    "contacto": "Contact",
+    "email": "Email",
+    "telefono": "Phone",
+    "sector": "Sector",
+    "obligaciones": "Assigned obligations",
+    "vencimientos": "Deadlines",
+    "notas": "Notes",
+    "fechaPresentacion": "Filing date",
+    "guardar": "Save",
+    "imprimir": "Print",
+    "descargar": "Download CSV",
+    "sinVencimientos": "No deadlines from the start date"
+  },
+  "calculadoras": {
+    "titulo": "Tax calculators",
+    "retRenta": "Income tax withholding",
+    "retIva": "VAT withholding",
+    "retIca": "ICA withholding",
+    "base": "Tax base",
+    "concepto": "Concept",
+    "tarifa": "Rate (%)",
+    "valorRetener": "Amount to withhold",
+    "valorNeto": "Net amount to pay",
+    "calcular": "Calculate",
+    "copiar": "Copy result",
+    "copiado": "Copied!",
+    "seleccionaConcepto": "Select a concept",
+    "advertencia": "Verify against current 2026 regulations"
+  },
+  "indicadores": {
+    "titulo": "Tax indicators 2026",
+    "uvt": "Tax Value Unit (UVT)",
+    "smmlv": "Monthly Minimum Wage",
+    "auxTransporte": "Transportation Allowance",
+    "tablaRetencion": "Withholding tax table",
+    "buscar": "Search concept...",
+    "concepto": "Concept",
+    "baseMinima": "Min. base (UVT)",
+    "baseMinimaCol": "Min. base (COP)",
+    "tarifa": "Rate %",
+    "vigencia": "Year",
+    "fuente": "Source"
+  },
+  "sidebar": {
+    "buscarCliente": "Search client...",
+    "sinResultados": "No results"
+  },
+  "lang": {
+    "cambiarIngles": "Switch to English",
+    "cambiarEspanol": "Cambiar a Español"
+  }
+}
