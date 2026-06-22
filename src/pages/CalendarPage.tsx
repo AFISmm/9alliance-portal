@@ -3,7 +3,7 @@ import { format, addMonths, subMonths, startOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { clients } from '../data/clients';
+import { realClients } from '../data/clients';
 import { obligaciones } from '../data/obligaciones';
 import { getAllVencimientos } from '../lib/getVencimientos';
 import type { Estado, Vencimiento } from '../lib/getVencimientos';
@@ -27,7 +27,7 @@ export default function CalendarPage() {
   );
   const [selected, setSelected] = useState<Vencimiento | null>(null);
 
-  const allVenc = useMemo(() => getAllVencimientos(clients, obligaciones), []);
+  const allVenc = useMemo(() => getAllVencimientos(realClients, obligaciones), []);
 
   const filtered = useMemo(() => allVenc.filter(v =>
     (!clienteFilter || v.clienteId === clienteFilter) &&
@@ -61,7 +61,7 @@ export default function CalendarPage() {
           className="bg-navy-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-cream-100 focus:outline-none focus:border-gold-500/50"
         >
           <option value="">{t('calendario.filtroCliente')}: {t('calendario.todos')}</option>
-          {clients.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+          {realClients.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
         </select>
         <select
           value={obFilter}

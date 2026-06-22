@@ -10,6 +10,7 @@ export interface Client {
   obligaciones: string[];
   notas?: string;
   fechaInicioVencimientos?: string;
+  esReal?: boolean;
 }
 
 export const clients: Client[] = [
@@ -24,6 +25,7 @@ export const clients: Client[] = [
     ultimoDigitoNit: '6',
     obligaciones: ['renta_pj', 'iva_bimestral', 'retencion', 'pila'],
     fechaInicioVencimientos: '2026-06-01',
+    esReal: true,
   },
   {
     id: 'c002',
@@ -36,6 +38,7 @@ export const clients: Client[] = [
     ultimoDigitoNit: '2',
     obligaciones: ['renta_pj', 'iva_bimestral', 'retencion', 'pila'],
     fechaInicioVencimientos: '2026-06-01',
+    esReal: true,
   },
   {
     id: 'c003',
@@ -97,3 +100,5 @@ export const clients: Client[] = [
 export const clientsMap: Record<string, Client> = Object.fromEntries(
   clients.map((c) => [c.id, c])
 );
+
+export const realClients = clients.filter(c => c.esReal);

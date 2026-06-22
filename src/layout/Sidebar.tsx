@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Logo9A } from '../components/Logo9A';
+import { realClients } from '../data/clients';
 
 const navItems = [
   { key: 'inicio',           path: '/',            exact: true  },
@@ -19,6 +20,10 @@ export function Sidebar() {
     if (exact) return location.pathname === path;
     return location.pathname === path || location.pathname.startsWith(path + '/');
   }
+
+  const activeClientId = location.pathname.startsWith('/cliente/')
+    ? location.pathname.split('/')[2]
+    : null;
 
   return (
     <aside className="w-52 min-w-[200px] bg-navy-950 border-r border-white/10 flex flex-col shrink-0 min-h-screen">
@@ -41,6 +46,29 @@ export function Sidebar() {
           </button>
         ))}
       </nav>
+
+      {/* Sección CLIENTES */}
+      <div className="border-t border-white/10 px-3 py-4">
+        <p className="text-xs font-semibold text-cream-200/35 uppercase tracking-wider px-3 mb-2">
+          Clientes
+        </p>
+        <div className="space-y-0.5">
+          {realClients.map(c => (
+            <button
+              key={c.id}
+              onClick={() => navigate(`/cliente/${c.id}`)}
+              className={`w-full text-left px-3 py-2 rounded-lg transition
+                ${activeClientId === c.id
+                  ? 'text-gold-400 bg-gold-500/10'
+                  : 'text-cream-200/60 hover:text-cream-100 hover:bg-white/5'
+                }`}
+            >
+              <p className="text-xs font-medium truncate">{c.nombre}</p>
+              <p className="text-cream-200/30 text-xs">{c.nit}</p>
+            </button>
+          ))}
+        </div>
+      </div>
     </aside>
   );
 }

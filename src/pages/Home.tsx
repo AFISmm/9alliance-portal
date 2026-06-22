@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { clients } from '../data/clients';
+import { realClients } from '../data/clients';
 import { obligaciones } from '../data/obligaciones';
 import { getAllVencimientos } from '../lib/getVencimientos';
 import type { Estado } from '../lib/getVencimientos';
@@ -30,7 +30,7 @@ export default function Home() {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
 
-  const allVenc = useMemo(() => getAllVencimientos(clients, obligaciones), []);
+  const allVenc = useMemo(() => getAllVencimientos(realClients, obligaciones), []);
 
   const counts: Record<Estado, number> = useMemo(() => ({
     pendiente: allVenc.filter(v => v.estado === 'pendiente').length,
