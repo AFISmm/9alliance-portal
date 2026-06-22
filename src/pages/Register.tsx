@@ -7,7 +7,7 @@ import { Logo9A } from '../components/Logo9A';
 
 export default function Register() {
   const { t } = useTranslation();
-  const { signUp } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

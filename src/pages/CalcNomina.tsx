@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { differenceInDays, parseISO, isValid } from 'date-fns';
 import { formatCOP } from '../data/fiscalParams';
@@ -50,8 +50,6 @@ export default function CalcNomina() {
   const totalDed    = valSalud + valPension;
   const neto        = sal - totalDed;
 
-  const [copiadoText, setCopiadoText] = useState('');
-  useEffect(() => { setCopiadoText(''); }, [salario, pctSalud, pctPension, fechaInicio, fechaFin]);
 
   function limpiar() {
     setFechaInicio(''); setFechaFin('');
