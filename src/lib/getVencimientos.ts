@@ -5,6 +5,7 @@ import type { TaxEvent } from '../data/taxCalendar';
 import { pila2026 } from '../data/socialSecurity';
 import type { PilaEvent } from '../data/socialSecurity';
 import { parseISO, isAfter, isBefore, addDays, isWithinInterval, startOfDay } from 'date-fns';
+import { fechaPorUltimoDigito, fechaPorDosUltimosDigitos, formatFechaExacta } from './nitFechas';
 
 export type Estado = 'pendiente' | 'proximo' | 'presentado' | 'vencido';
 
@@ -21,6 +22,8 @@ export interface Vencimiento {
   estado: Estado;
   fechaPresentacion?: string;
   notaUsuario?: string;
+  fechaExactaNit?: string;     // ISO date computed from NIT digit
+  fechaExactaLabel?: string;   // Human-readable version
 }
 
 export interface VencimientoEstadoDB {
@@ -78,7 +81,23 @@ export function getVencimientos(
     for (const ev of events) {
       if (corte && isBefore(parseISO(ev.fechaFin), corte)) continue;
       const db = estadosMap.get(ev.id);
-      const estado = computeEstado(ev.fechaFin, db?.estado, db?.fecha_presentacion);
+
+      // Compute exact date from NIT when available
+      let fechaExactaNit: string | undefined;
+      let fechaExactaLabel: string | undefined;
+      if ('dependeNit' in ev && client.nit) {
+        const dep = (ev as TaxEvent).dependeNit;
+        if (dep === 'ultimo') {
+          fechaExactaNit = fechaPorUltimoDigito(ev.fechaInicio, client.nit);
+          fechaExactaLabel = formatFechaExacta(fechaExactaNit);
+        } else if (dep === 'dos_ultimos') {
+          fechaExactaNit = fechaPorDosUltimosDigitos(ev.fechaInicio, client.nit);
+          fechaExactaLabel = formatFechaExacta(fechaExactaNit);
+        }
+      }
+
+      const efectivaFin = fechaExactaNit || ev.fechaFin;
+      const estado = computeEstado(efectivaFin, db?.estado, db?.fecha_presentacion);
       result.push({
         id: ev.id,
         clienteId: client.id,
@@ -92,6 +111,8 @@ export function getVencimientos(
         estado,
         fechaPresentacion: db?.fecha_presentacion,
         notaUsuario: db?.nota,
+        fechaExactaNit,
+        fechaExactaLabel,
       });
     }
   }

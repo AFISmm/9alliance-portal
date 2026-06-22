@@ -100,8 +100,17 @@ export default function ClientDetail() {
                     <div>
                       <p className="text-cream-100 font-medium">{ob?.nombre}</p>
                       <p className="text-cream-200/50 text-sm">{v.periodo}</p>
-                      <p className="text-gold-300 text-xs mt-0.5">{v.rangoFechas}</p>
-                      {v.nota && <p className="text-amber-300/70 text-xs mt-1">{v.nota}</p>}
+                      {v.fechaExactaLabel ? (
+                        <div className="mt-1">
+                          <span className="inline-flex items-center gap-1.5 bg-gold-500/10 border border-gold-500/25 text-gold-300 text-xs px-2 py-0.5 rounded-full">
+                            📅 Vence: {v.fechaExactaLabel}
+                          </span>
+                          <p className="text-cream-200/30 text-xs mt-0.5">Rango DIAN: {v.rangoFechas}</p>
+                        </div>
+                      ) : (
+                        <p className="text-gold-300 text-xs mt-0.5">{v.rangoFechas}</p>
+                      )}
+                      {v.nota && <p className="text-amber-300/60 text-xs mt-1 italic">{v.nota}</p>}
                     </div>
                     <StatusBadge estado={estadoActual} size="md" />
                   </div>

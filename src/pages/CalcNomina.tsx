@@ -132,7 +132,7 @@ export default function CalcNomina() {
           <input type="date" value={fechaFin} onChange={e => setFechaFin(e.target.value)} className={inputClass()} />
         </Row>
 
-        <Row label={t('nomina.diasDevengados')} hint={t('nomina.bloqueado')}>
+        <Row label={t('nomina.diasDevengados')}>
           <input readOnly value={dias !== null ? dias : '—'} className={readonlyClass()} />
         </Row>
 
@@ -153,7 +153,7 @@ export default function CalcNomina() {
           />
         </Row>
 
-        <Row label={t('nomina.valorSalud')} hint={t('nomina.bloqueado')}>
+        <Row label={t('nomina.valorSalud')}>
           <input readOnly value={sal > 0 ? formatCOP(valSalud) : '—'} className={readonlyClass()} />
         </Row>
 
@@ -165,11 +165,11 @@ export default function CalcNomina() {
           />
         </Row>
 
-        <Row label={t('nomina.valorPension')} hint={t('nomina.bloqueado')}>
+        <Row label={t('nomina.valorPension')}>
           <input readOnly value={sal > 0 ? formatCOP(valPension) : '—'} className={readonlyClass()} />
         </Row>
 
-        <Row label={t('nomina.totalDeducciones')} hint={t('nomina.bloqueado')}>
+        <Row label={t('nomina.totalDeducciones')}>
           <input readOnly value={sal > 0 ? formatCOP(totalDed) : '—'} className={readonlyClass()} />
         </Row>
 
