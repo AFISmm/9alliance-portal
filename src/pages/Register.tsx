@@ -22,12 +22,23 @@ export default function Register() {
     if (password.length < 8) return setError(t('auth.errorContrasena'));
     if (password !== confirm) return setError(t('auth.errorConfirmar'));
     setLoading(true);
-    const { error: err } = await signUp(email, password);
-    setLoading(false);
-    if (err) {
-      if (err.message?.includes('already')) return setError(t('auth.errorCorreoUsado'));
-      return setError(err.message);
+
+    const res = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const result = await res.json();
+
+    if (!res.ok) {
+      setLoading(false);
+      if (result.error?.includes('already')) return setError(t('auth.errorCorreoUsado'));
+      return setError(result.error ?? 'Error al registrar');
     }
+
+    const { error: signInErr } = await signIn(email, password);
+    setLoading(false);
+    if (signInErr) return setError(t('auth.errorCredenciales'));
     navigate('/');
   }
 
