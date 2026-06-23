@@ -95,7 +95,7 @@ export function MigradorComprobantes() {
   const [phase, setPhase] = useState<Phase>('idle');
   const [fileName, setFileName] = useState('');
   const [journals, setJournals] = useState<JournalGroup[]>([]);
-  const [totalRows, setTotalRows]   = useState(0);
+  const [_totalRows, setTotalRows]  = useState(0);
   const [uniqueNits, setUniqueNits] = useState<Set<string>>(new Set());
   const [uniqueCuentas, setUniqueCuentas] = useState<Set<string>>(new Set());
   const [progress, setProgress]     = useState({ done: 0, total: 0, ok: 0, errors: 0, skipped: 0 });
