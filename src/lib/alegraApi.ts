@@ -108,14 +108,14 @@ export async function getJournals(limit = 50): Promise<AlegraJournal[]> {
   return toList(data);
 }
 
-// ── Facturas de venta ── endpoint: /invoices
-export async function getInvoices(limit = 50): Promise<AlegraInvoice[]> {
+// ── Facturas de venta ── endpoint: /invoices (Alegra max limit: 30)
+export async function getInvoices(limit = 30): Promise<AlegraInvoice[]> {
   const data = await proxy(`invoices?limit=${limit}&order_field=date&order_direction=desc`);
   return toList(data);
 }
 
-// ── Gastos / compras ── endpoint: /bills
-export async function getExpenses(limit = 50): Promise<AlegraExpense[]> {
+// ── Gastos / compras ── endpoint: /bills (Alegra max limit: 30)
+export async function getExpenses(limit = 30): Promise<AlegraExpense[]> {
   const data = await proxy(`bills?limit=${limit}&order_field=date&order_direction=desc`);
   return toList(data);
 }

@@ -325,7 +325,7 @@ function Facturas() {
 
   const load = useCallback(() => {
     setLoading(true); setError('');
-    getInvoices(50).then(setInvoices).catch(e => setError(e.message)).finally(() => setLoading(false));
+    getInvoices(30).then(setInvoices).catch(e => setError(e.message)).finally(() => setLoading(false));
   }, []);
   useEffect(() => { load(); }, [load]);
 
@@ -381,7 +381,7 @@ function Gastos() {
 
   const load = useCallback(() => {
     setLoading(true); setError('');
-    getExpenses(50).then(setExpenses).catch(e => setError(e.message)).finally(() => setLoading(false));
+    getExpenses(30).then(setExpenses).catch(e => setError(e.message)).finally(() => setLoading(false));
   }, []);
   useEffect(() => { load(); }, [load]);
 
