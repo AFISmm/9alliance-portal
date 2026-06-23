@@ -5,8 +5,10 @@ import {
   type AlegraAccount, type AlegraJournal, type AlegraInvoice,
   type AlegraExpense, type AlegraItem, type AlegraContact,
 } from '../lib/alegraApi';
+import { MigradorComprobantes } from '../components/alegra/MigradorComprobantes';
+import { ImportarTerceros }     from '../components/alegra/ImportarTerceros';
 
-type Tab = 'facturas' | 'gastos' | 'productos' | 'contactos' | 'cuentas' | 'comprobantes';
+type Tab = 'facturas' | 'gastos' | 'productos' | 'contactos' | 'cuentas' | 'comprobantes' | 'migrador' | 'terceros';
 
 function fmt(n: number) {
   return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n);
@@ -821,13 +823,15 @@ export default function AlegraPage() {
     getAccounts().then(setAccounts).catch(() => {});
   }, []);
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: 'facturas',     label: 'Facturas'         },
-    { id: 'gastos',       label: 'Gastos'           },
-    { id: 'productos',    label: 'Productos'        },
-    { id: 'contactos',    label: 'Contactos'        },
-    { id: 'cuentas',      label: 'Plan de cuentas'  },
-    { id: 'comprobantes', label: 'Comprobantes'     },
+  const tabs: { id: Tab; label: string; icon?: string }[] = [
+    { id: 'facturas',     label: 'Facturas'                },
+    { id: 'gastos',       label: 'Gastos'                  },
+    { id: 'productos',    label: 'Productos'               },
+    { id: 'contactos',    label: 'Contactos'               },
+    { id: 'cuentas',      label: 'Plan de cuentas'         },
+    { id: 'comprobantes', label: 'Comprobantes'            },
+    { id: 'migrador',     label: 'Migrador',    icon: '📒' },
+    { id: 'terceros',     label: 'Terceros',    icon: '👥' },
   ];
 
   return (
@@ -856,9 +860,10 @@ export default function AlegraPage() {
       <div className="flex gap-1 flex-wrap bg-navy-900/60 rounded-xl p-1 w-fit">
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5 ${
               tab === t.id ? 'bg-gold-500/15 text-gold-300 border border-gold-500/25' : 'text-cream-200/50 hover:text-cream-100'
             }`}>
+            {t.icon && <span className="text-base leading-none">{t.icon}</span>}
             {t.label}
           </button>
         ))}
@@ -871,6 +876,8 @@ export default function AlegraPage() {
         {tab === 'contactos'    && <Contactos />}
         {tab === 'cuentas'      && <PlanCuentas />}
         {tab === 'comprobantes' && <Comprobantes accounts={accounts} />}
+        {tab === 'migrador'     && <MigradorComprobantes />}
+        {tab === 'terceros'     && <ImportarTerceros />}
       </div>
     </div>
   );

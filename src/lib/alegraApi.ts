@@ -209,3 +209,85 @@ export async function createItem(payload: {
     price: [{ idPriceList: 1, price: payload.price }],
   });
 }
+
+// ── Bulk helpers ───────────────────────────────────────────────────────────────
+
+export function excelSerialToISO(serial: number): string {
+  const date = new Date(Math.round((serial - 25569) * 86400000));
+  return date.toISOString().slice(0, 10);
+}
+
+export async function getAllContactsMap(): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  let start = 0;
+  const limit = 30;
+  while (true) {
+    const data = await proxy(`contacts?limit=${limit}&start=${start}`);
+    const batch = toList(data);
+    if (!batch.length) break;
+    for (const c of batch) {
+      const num = c.identificationObject?.number ?? c.identification ?? '';
+      if (num) map.set(String(num).trim(), String(c.id));
+    }
+    if (batch.length < limit) break;
+    start += limit;
+  }
+  return map;
+}
+
+export async function getAllAccountsMap(): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  const data = await proxy('categories?limit=5000');
+  const flat = flattenCategories(toList(data));
+  for (const a of flat) {
+    if (a.code) map.set(a.code.trim(), a.id);
+  }
+  return map;
+}
+
+export interface TerceroInput {
+  nit: string;
+  nombre: string;
+}
+
+export async function createTercero(t: TerceroInput): Promise<AlegraContact> {
+  const digits = t.nit.replace(/[^0-9]/g, '');
+  const isEmpresa = digits.length >= 8 && (digits.startsWith('8') || digits.startsWith('9'));
+  return proxy('contacts', 'POST', {
+    name: t.nombre.trim() || digits,
+    identificationObject: {
+      type: isEmpresa ? 'NIT' : 'CC',
+      number: digits,
+    },
+    kindOfPerson: isEmpresa ? 'LEGAL_ENTITY' : 'PERSON_ENTITY',
+    type: ['client', 'vendor'],
+  });
+}
+
+export interface JournalRow {
+  accountCode: string;
+  accountId?: string;
+  nit: string;
+  contactId?: string;
+  detalle: string;
+  debito: number;
+  credito: number;
+}
+
+export async function uploadJournal(params: {
+  date: string;
+  comprobante: string;
+  entries: JournalRow[];
+}): Promise<AlegraJournal> {
+  return proxy('journals', 'POST', {
+    date: params.date,
+    observations: params.comprobante,
+    entries: params.entries.map(e => ({
+      account: { id: e.accountId },
+      debit: e.debito,
+      credit: e.credito,
+      description: e.detalle || params.comprobante,
+      ...(e.contactId ? { contact: { id: e.contactId } } : {}),
+    })),
+  });
+}
