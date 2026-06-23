@@ -49,8 +49,8 @@ export default function ClientDetail() {
   if (!client) {
     return (
       <div className="text-center py-20">
-        <p className="text-cream-200/40 mb-4">Cliente no encontrado</p>
-        <button onClick={() => navigate('/')} className="text-gold-400 hover:underline text-sm">← Volver al inicio</button>
+        <p className="text-cream-200/40 mb-4">Empresa no encontrada</p>
+        <button onClick={() => navigate('/empresas')} className="text-gold-400 hover:underline text-sm">← Volver a Empresas</button>
       </div>
     );
   }

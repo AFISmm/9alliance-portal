@@ -7,15 +7,15 @@ export default function ClientesExternos() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-semibold text-cream-100">Clientes</h1>
-        <p className="text-cream-200/40 text-sm mt-1">{realClients.length} clientes activos</p>
+        <h1 className="text-2xl font-semibold text-cream-100">Empresas</h1>
+        <p className="text-cream-200/40 text-sm mt-1">{realClients.length} empresas activas</p>
       </div>
 
       <div className="grid gap-4">
         {realClients.map(c => (
           <button
             key={c.id}
-            onClick={() => navigate(`/cliente/${c.id}`)}
+            onClick={() => navigate(`/empresa/${c.id}`)}
             className="text-left w-full bg-navy-800/50 hover:bg-navy-800 border border-white/10 hover:border-gold-500/30 rounded-xl p-5 transition group"
           >
             <div className="flex items-start justify-between gap-4">

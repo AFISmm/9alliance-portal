@@ -1,30 +1,30 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { Logo9A } from '../components/Logo9A';
 import { realClients } from '../data/clients';
 
 const navItems = [
-  { key: 'inicio',       path: '/',             exact: true  },
-  { key: 'calendario',   path: '/calendario',   exact: false },
-  { key: 'calculadoras', path: '/calculadoras', exact: false },
-  { key: 'indicadores',  path: '/indicadores',  exact: false },
-  { key: 'alegra',       path: '/alegra',       exact: false },
+  { label: 'EMPRESAS',             path: '/empresas'            },
+  { label: 'GESTIÓN ESTRATÉGICA',  path: '/gestion-estrategica' },
+  { label: 'GESTIÓN FINANCIERA',   path: '/gestion-financiera'  },
+  { label: 'GESTIÓN COMERCIAL',    path: '/gestion-comercial'   },
+  { label: 'GESTIÓN OPERATIVA',    path: '/gestion-operativa'   },
+  { label: 'INFORMACIÓN GENERAL',  path: '/informacion-general' },
 ] as const;
 
 export function Sidebar() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { t } = useTranslation();
-  const [clientesOpen, setClientesOpen] = useState(true);
+  const navigate   = useNavigate();
+  const location   = useLocation();
+  const [empresasOpen, setEmpresasOpen] = useState(true);
 
-  function isActive(path: string, exact: boolean) {
-    if (exact) return location.pathname === path;
+  function isActive(path: string) {
+    if (path === '/empresas') {
+      return location.pathname === '/empresas' || location.pathname.startsWith('/empresa/');
+    }
     return location.pathname === path || location.pathname.startsWith(path + '/');
   }
 
-  const onClientes = location.pathname === '/clientes' || location.pathname.startsWith('/cliente/');
-  const activeClientId = location.pathname.startsWith('/cliente/')
+  const activeEmpresaId = location.pathname.startsWith('/empresa/')
     ? location.pathname.split('/')[2]
     : null;
 
@@ -34,60 +34,54 @@ export function Sidebar() {
         <Logo9A size={64} />
       </div>
 
-      <nav className="px-3 pt-4 space-y-0.5">
-        {navItems.map(({ key, path, exact }) => (
-          <button
-            key={key}
-            onClick={() => navigate(path)}
-            className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition
-              ${isActive(path, exact)
-                ? 'text-gold-400 bg-gold-500/10'
-                : 'text-cream-200/65 hover:text-cream-100 hover:bg-white/5'
-              }`}
-          >
-            {t(`nav.${key}`)}
-          </button>
-        ))}
-      </nav>
+      <nav className="px-3 pt-4 flex-1 space-y-0.5">
+        {navItems.map(({ label, path }) => {
+          const active = isActive(path);
+          const isEmpresas = path === '/empresas';
 
-      {/* Sección Clientes — actúa como ítem de nav + lista desplegable */}
-      <div className="border-t border-white/10 px-3 pt-3 pb-4 mt-3">
-        <button
-          onClick={() => { navigate('/clientes'); setClientesOpen(true); }}
-          onContextMenu={e => { e.preventDefault(); setClientesOpen(o => !o); }}
-          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-            onClientes
-              ? 'text-gold-400 bg-gold-500/10'
-              : 'text-cream-200/65 hover:text-cream-100 hover:bg-white/5'
-          }`}
-        >
-          <span>Clientes</span>
-          <span
-            className="text-gold-400/70 text-xs pl-2"
-            onClick={e => { e.stopPropagation(); setClientesOpen(o => !o); }}
-          >
-            {clientesOpen ? '▾' : '▸'}
-          </span>
-        </button>
-
-        {clientesOpen && (
-          <div className="mt-1 space-y-0.5">
-            {realClients.map(c => (
+          return (
+            <div key={path}>
               <button
-                key={c.id}
-                onClick={() => navigate(`/cliente/${c.id}`)}
-                className={`w-full text-left px-3 py-2 rounded-lg transition
-                  ${activeClientId === c.id
+                onClick={() => { navigate(path); if (isEmpresas) setEmpresasOpen(true); }}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition
+                  ${active
                     ? 'text-gold-400 bg-gold-500/10'
-                    : 'text-cream-200/60 hover:text-cream-100 hover:bg-white/5'
+                    : 'text-cream-200/55 hover:text-cream-100 hover:bg-white/5'
                   }`}
               >
-                <p className="text-xs font-medium truncate">{c.nombre}</p>
+                <span>{label}</span>
+                {isEmpresas && (
+                  <span
+                    className="text-gold-400/60 text-xs pl-2"
+                    onClick={e => { e.stopPropagation(); setEmpresasOpen(o => !o); }}
+                  >
+                    {empresasOpen ? '▾' : '▸'}
+                  </span>
+                )}
               </button>
-            ))}
-          </div>
-        )}
-      </div>
+
+              {/* Empresas sub-list */}
+              {isEmpresas && empresasOpen && (
+                <div className="mt-0.5 mb-1 space-y-0.5">
+                  {realClients.map(c => (
+                    <button
+                      key={c.id}
+                      onClick={() => navigate(`/empresa/${c.id}`)}
+                      className={`w-full text-left pl-6 pr-3 py-2 rounded-lg transition text-xs
+                        ${activeEmpresaId === c.id
+                          ? 'text-gold-400 bg-gold-500/10'
+                          : 'text-cream-200/55 hover:text-cream-100 hover:bg-white/5'
+                        }`}
+                    >
+                      <p className="font-medium truncate">{c.nombre}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </nav>
     </aside>
   );
 }
