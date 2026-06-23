@@ -465,11 +465,27 @@ export default function AlegraPage() {
   const [accounts, setAccounts] = useState<AlegraAccount[]>([]);
   const [connStatus, setConnStatus] = useState<'checking' | 'ok' | 'error'>('checking');
   const [connMsg, setConnMsg]   = useState('');
+  const [diag, setDiag]         = useState<any>(null);
+  const [showDiag, setShowDiag] = useState(false);
+
+  async function runDiag() {
+    setShowDiag(true);
+    try {
+      const res = await fetch('/api/alegra', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: '__diag__' }),
+      });
+      setDiag(await res.json());
+    } catch (e: any) {
+      setDiag({ error: e.message });
+    }
+  }
 
   useEffect(() => {
     getContacts()
       .then(() => setConnStatus('ok'))
-      .catch(e => { setConnStatus('error'); setConnMsg(e.message); });
+      .catch(e => { setConnStatus('error'); setConnMsg(e.message); runDiag(); });
     getAccounts().then(setAccounts).catch(() => {});
   }, []);
 
@@ -523,6 +539,31 @@ export default function AlegraPage() {
           </button>
         ))}
       </div>
+
+      {/* Diagnostic panel — shown automatically on connection error */}
+      {showDiag && diag && (
+        <div className="bg-navy-800/60 border border-amber-500/25 rounded-xl p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-amber-300 text-sm font-semibold">Diagnóstico de conexión</p>
+            <button onClick={() => setShowDiag(false)} className="text-cream-200/40 hover:text-cream-100 text-xs">✕</button>
+          </div>
+          <div className="font-mono text-xs space-y-1 text-cream-200/60">
+            <p>Email configurado: <span className={diag.hasEmail ? 'text-green-400' : 'text-red-400'}>{diag.hasEmail ? `sí (${diag.emailPrefix}…)` : 'NO'}</span></p>
+            <p>Token configurado: <span className={diag.hasToken ? 'text-green-400' : 'text-red-400'}>{diag.hasToken ? `sí (${diag.tokenLen} chars)` : 'NO'}</span></p>
+            {diag.ping && (
+              <div className="mt-2 bg-navy-950/60 rounded-lg p-3 space-y-1">
+                <p>HTTP status Alegra: <span className={diag.ping.status === 200 ? 'text-green-400' : 'text-red-400'}>{diag.ping.status ?? 'error'}</span></p>
+                <p className="text-cream-200/40 break-all">Respuesta: {diag.ping.body ?? diag.ping.error}</p>
+              </div>
+            )}
+          </div>
+          {diag.ping?.status !== 200 && (
+            <p className="text-amber-300/70 text-xs border-t border-white/10 pt-2">
+              ⚠ El token de API puede haber cambiado al actualizar el plan. Ve a <strong>Alegra → Configuración → Empresa → API</strong>, copia el token actual y avísame para actualizarlo en Vercel.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Content */}
       <div>
