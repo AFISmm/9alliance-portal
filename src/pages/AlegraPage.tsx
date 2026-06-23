@@ -109,9 +109,13 @@ function PlanCuentas() {
           </thead>
           <tbody>
             {filtered.map(a => (
-              <tr key={a.id} className="border-b border-white/5 hover:bg-white/3 transition">
-                <td className="px-4 py-2.5 font-mono text-gold-400/80 text-xs">{a.code}</td>
-                <td className="px-4 py-2.5 text-cream-100">{a.name}</td>
+              <tr key={a.id} className={`border-b border-white/5 hover:bg-white/3 transition ${(a._depth ?? 0) === 0 ? 'bg-white/2' : ''}`}>
+                <td className="px-4 py-2.5 font-mono text-gold-400/80 text-xs">{a.code ?? '—'}</td>
+                <td className="px-4 py-2.5 text-cream-100" style={{ paddingLeft: `${(a._depth ?? 0) * 16 + 16}px` }}>
+                  {(a._depth ?? 0) === 0
+                    ? <span className="font-semibold text-cream-100">{a.name}</span>
+                    : <span className="text-cream-200/80">{a.name}</span>}
+                </td>
                 <td className="px-4 py-2.5 text-cream-200/45 text-xs hidden md:table-cell">{a.type}</td>
                 <td className="px-4 py-2.5 text-right hidden lg:table-cell">
                   {a.balance !== undefined
@@ -172,7 +176,7 @@ function Comprobantes({ accounts }: { accounts: AlegraAccount[] }) {
         entries: entries
           .filter(e => e.accountId && (parseFloat(e.debit) || parseFloat(e.credit)))
           .map(e => ({
-            account: { id: parseInt(e.accountId) },
+            account: { id: e.accountId },
             debit: parseFloat(e.debit) || 0,
             credit: parseFloat(e.credit) || 0,
           })),
