@@ -235,14 +235,39 @@ export async function getAllContactsMap(): Promise<Map<string, string>> {
   return map;
 }
 
-export async function getAllAccountsMap(): Promise<Map<string, string>> {
-  const map = new Map<string, string>();
+export interface AccountDetail {
+  id: string;
+  code: string;
+  name: string;
+  blocked: boolean;
+}
+
+export async function getAllAccountsMap(): Promise<{
+  codeToId: Map<string, string>;
+  details: Map<string, AccountDetail>;
+}> {
+  const codeToId = new Map<string, string>();
+  const details  = new Map<string, AccountDetail>();
   const data = await proxy('categories?limit=5000');
   const flat = flattenCategories(toList(data));
   for (const a of flat) {
-    if (a.code) map.set(a.code.trim(), a.id);
+    if (!a.code) continue;
+    const code = a.code.trim();
+    const blocked = !!(a.blocked || a.readOnly);
+    codeToId.set(code, a.id);
+    details.set(code, { id: a.id, code, name: a.name, blocked });
   }
-  return map;
+  return { codeToId, details };
+}
+
+export function findActiveParent(code: string, details: Map<string, AccountDetail>): AccountDetail | undefined {
+  let c = code;
+  while (c.length > 1) {
+    c = c.slice(0, -1);
+    const parent = details.get(c);
+    if (parent && !parent.blocked) return parent;
+  }
+  return undefined;
 }
 
 export interface TerceroInput {
