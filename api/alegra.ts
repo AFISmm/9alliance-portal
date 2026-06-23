@@ -3,24 +3,38 @@ export default async function handler(req: any, res: any) {
 
   const { endpoint, method = 'GET', body } = req.body ?? {};
 
-  // Diagnostic mode: returns env var presence + raw Alegra ping
+  // Diagnostic mode: tests multiple URLs to find what works
   if (endpoint === '__diag__') {
-    const email = process.env.ALEGRA_EMAIL ?? '';
-    const token = process.env.ALEGRA_TOKEN ?? '';
-    const hasEmail = email.length > 0;
-    const hasToken = token.length > 0;
+    const email = (process.env.ALEGRA_EMAIL ?? '').trim();
+    const token = (process.env.ALEGRA_TOKEN ?? '').trim();
     const credentials = Buffer.from(`${email}:${token}`).toString('base64');
-    let ping: any = null;
-    try {
-      const r = await fetch('https://app.alegra.com/api/r1/contacts?limit=1', {
-        headers: { Authorization: `Basic ${credentials}`, Accept: 'application/json' },
-      });
-      const text = await r.text();
-      ping = { status: r.status, body: text.slice(0, 300) };
-    } catch (e: any) {
-      ping = { error: e.message };
+    const headers = { Authorization: `Basic ${credentials}`, Accept: 'application/json' };
+
+    const attempts: any[] = [];
+    const testUrls = [
+      'https://app.alegra.com/api/r1/contacts?limit=1',
+      'https://app.alegra.com/api/r1/invoices?limit=1',
+      'https://app.alegra.com/api/r1/items?limit=1',
+      'https://app.alegra.com/api/r1/users',
+      'https://app.alegra.com/api/r1/company',
+    ];
+    for (const url of testUrls) {
+      try {
+        const r = await fetch(url, { headers });
+        const text = await r.text();
+        attempts.push({ url, status: r.status, body: text.slice(0, 150) });
+        if (r.status === 200) break; // stop on first success
+      } catch (e: any) {
+        attempts.push({ url, error: e.message });
+      }
     }
-    return res.status(200).json({ hasEmail, hasToken, emailPrefix: email.slice(0, 4), tokenLen: token.length, ping });
+    return res.status(200).json({
+      hasEmail: email.length > 0,
+      hasToken: token.length > 0,
+      emailPrefix: email.slice(0, 5),
+      tokenLen: token.length,
+      attempts,
+    });
   }
 
   if (!endpoint) return res.status(400).json({ error: 'endpoint requerido' });

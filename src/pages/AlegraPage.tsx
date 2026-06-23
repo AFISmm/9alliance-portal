@@ -548,20 +548,17 @@ export default function AlegraPage() {
             <button onClick={() => setShowDiag(false)} className="text-cream-200/40 hover:text-cream-100 text-xs">✕</button>
           </div>
           <div className="font-mono text-xs space-y-1 text-cream-200/60">
-            <p>Email configurado: <span className={diag.hasEmail ? 'text-green-400' : 'text-red-400'}>{diag.hasEmail ? `sí (${diag.emailPrefix}…)` : 'NO'}</span></p>
-            <p>Token configurado: <span className={diag.hasToken ? 'text-green-400' : 'text-red-400'}>{diag.hasToken ? `sí (${diag.tokenLen} chars)` : 'NO'}</span></p>
-            {diag.ping && (
-              <div className="mt-2 bg-navy-950/60 rounded-lg p-3 space-y-1">
-                <p>HTTP status Alegra: <span className={diag.ping.status === 200 ? 'text-green-400' : 'text-red-400'}>{diag.ping.status ?? 'error'}</span></p>
-                <p className="text-cream-200/40 break-all">Respuesta: {diag.ping.body ?? diag.ping.error}</p>
+            <p>Email: <span className={diag.hasEmail ? 'text-green-400' : 'text-red-400'}>{diag.hasEmail ? `sí (${diag.emailPrefix}…)` : 'NO'}</span></p>
+            <p>Token: <span className={diag.hasToken ? 'text-green-400' : 'text-red-400'}>{diag.hasToken ? `sí (${diag.tokenLen} chars)` : 'NO'}</span></p>
+            {diag.attempts?.map((a: any, i: number) => (
+              <div key={i} className="mt-1 bg-navy-950/60 rounded-lg p-2 space-y-0.5">
+                <p className="text-cream-200/40 break-all text-xs">{a.url.replace('https://app.alegra.com/api/r1/', '')}</p>
+                {a.status !== undefined
+                  ? <p>→ <span className={a.status === 200 ? 'text-green-400' : 'text-red-400'}>HTTP {a.status}</span> — {a.body}</p>
+                  : <p className="text-red-400">→ {a.error}</p>}
               </div>
-            )}
+            ))}
           </div>
-          {diag.ping?.status !== 200 && (
-            <p className="text-amber-300/70 text-xs border-t border-white/10 pt-2">
-              ⚠ El token de API puede haber cambiado al actualizar el plan. Ve a <strong>Alegra → Configuración → Empresa → API</strong>, copia el token actual y avísame para actualizarlo en Vercel.
-            </p>
-          )}
         </div>
       )}
 
