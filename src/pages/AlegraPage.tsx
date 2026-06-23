@@ -551,10 +551,10 @@ export default function AlegraPage() {
             <p>Email: <span className={diag.hasEmail ? 'text-green-400' : 'text-red-400'}>{diag.hasEmail ? `sí (${diag.emailPrefix}…)` : 'NO'}</span></p>
             <p>Token: <span className={diag.hasToken ? 'text-green-400' : 'text-red-400'}>{diag.hasToken ? `sí (${diag.tokenLen} chars)` : 'NO'}</span></p>
             {diag.attempts?.map((a: any, i: number) => (
-              <div key={i} className="mt-1 bg-navy-950/60 rounded-lg p-2 space-y-0.5">
-                <p className="text-cream-200/40 break-all text-xs">{a.url.replace('https://app.alegra.com/api/r1/', '')}</p>
+              <div key={i} className={`mt-1 rounded-lg p-2 space-y-0.5 ${a.status === 200 ? 'bg-green-500/10 border border-green-500/20' : 'bg-navy-950/60'}`}>
+                <p className="text-cream-200/50 text-xs">{a.label}</p>
                 {a.status !== undefined
-                  ? <p>→ <span className={a.status === 200 ? 'text-green-400' : 'text-red-400'}>HTTP {a.status}</span> — {a.body}</p>
+                  ? <p>→ <span className={a.status === 200 ? 'text-green-400 font-bold' : 'text-red-400'}>HTTP {a.status}</span> — <span className="text-cream-200/40 break-all">{a.body}</span></p>
                   : <p className="text-red-400">→ {a.error}</p>}
               </div>
             ))}

@@ -3,31 +3,36 @@ export default async function handler(req: any, res: any) {
 
   const { endpoint, method = 'GET', body } = req.body ?? {};
 
-  // Diagnostic mode: tests multiple URLs to find what works
+  // Diagnostic mode: tests URL variants and auth methods
   if (endpoint === '__diag__') {
     const email = (process.env.ALEGRA_EMAIL ?? '').trim();
     const token = (process.env.ALEGRA_TOKEN ?? '').trim();
-    const credentials = Buffer.from(`${email}:${token}`).toString('base64');
-    const headers = { Authorization: `Basic ${credentials}`, Accept: 'application/json' };
+    const basicCreds = Buffer.from(`${email}:${token}`).toString('base64');
 
     const attempts: any[] = [];
-    const testUrls = [
-      'https://app.alegra.com/api/r1/contacts?limit=1',
-      'https://app.alegra.com/api/r1/invoices?limit=1',
-      'https://app.alegra.com/api/r1/items?limit=1',
-      'https://app.alegra.com/api/r1/users',
-      'https://app.alegra.com/api/r1/company',
+
+    // Test different base URLs and auth methods
+    const tests = [
+      { label: 'r1/contacts — Basic email:token',    url: 'https://app.alegra.com/api/r1/contacts',    auth: `Basic ${basicCreds}` },
+      { label: 'r1/contacts — Bearer token',         url: 'https://app.alegra.com/api/r1/contacts',    auth: `Bearer ${token}` },
+      { label: 'r1/contacts — Token only Basic',     url: 'https://app.alegra.com/api/r1/contacts',    auth: `Basic ${Buffer.from(`:${token}`).toString('base64')}` },
+      { label: 'r2/contacts — Basic email:token',    url: 'https://app.alegra.com/api/r2/contacts',    auth: `Basic ${basicCreds}` },
+      { label: 'r1/ (base) — Basic email:token',     url: 'https://app.alegra.com/api/r1/',            auth: `Basic ${basicCreds}` },
+      { label: 'r1/contacts NO auth',                url: 'https://app.alegra.com/api/r1/contacts',    auth: '' },
     ];
-    for (const url of testUrls) {
+
+    for (const t of tests) {
+      const headers: Record<string, string> = { Accept: 'application/json' };
+      if (t.auth) headers['Authorization'] = t.auth;
       try {
-        const r = await fetch(url, { headers });
+        const r = await fetch(t.url, { headers });
         const text = await r.text();
-        attempts.push({ url, status: r.status, body: text.slice(0, 150) });
-        if (r.status === 200) break; // stop on first success
+        attempts.push({ label: t.label, status: r.status, body: text.slice(0, 120) });
       } catch (e: any) {
-        attempts.push({ url, error: e.message });
+        attempts.push({ label: t.label, error: e.message });
       }
     }
+
     return res.status(200).json({
       hasEmail: email.length > 0,
       hasToken: token.length > 0,
