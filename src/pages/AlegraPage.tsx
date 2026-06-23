@@ -30,10 +30,25 @@ function statusColor(s: string): 'green' | 'red' | 'blue' | 'amber' | 'default' 
   return 'default';
 }
 
-function ErrorBox({ title, msg }: { title: string; msg: string }) {
+function ErrorBox({ msg }: { msg: string }) {
+  const isForbidden = msg.toLowerCase().includes('forbidden') || msg.includes('403');
+  if (isForbidden) {
+    return (
+      <div className="bg-amber-500/8 border border-amber-500/20 rounded-xl p-5 space-y-2">
+        <p className="text-amber-300 font-medium text-sm">Acceso no habilitado para este módulo</p>
+        <p className="text-cream-200/50 text-xs leading-relaxed">
+          El usuario <span className="text-cream-100">mm@9alliance.co</span> no tiene permisos para este módulo de Alegra.
+        </p>
+        <p className="text-cream-200/45 text-xs leading-relaxed">
+          Para habilitarlo: en Alegra ve a <span className="text-cream-100">Configuración → Usuarios y roles</span>,
+          selecciona el usuario y activa los permisos del módulo de Contabilidad o Gastos.
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="bg-red-500/10 border border-red-500/25 rounded-xl p-4 space-y-1.5">
-      <p className="text-red-400 text-sm font-medium">{title}</p>
+      <p className="text-red-400 text-sm font-medium">Error al cargar</p>
       <p className="text-red-400/70 text-xs font-mono break-all">{msg}</p>
     </div>
   );
@@ -67,7 +82,7 @@ function PlanCuentas() {
   );
 
   if (loading) return <p className="text-cream-200/40 text-sm animate-pulse">Cargando plan de cuentas…</p>;
-  if (error)   return <ErrorBox title="No se pudo cargar el plan de cuentas" msg={error} />;
+  if (error)   return <ErrorBox msg={error} />;
 
   return (
     <div className="space-y-4">
@@ -174,7 +189,7 @@ function Comprobantes({ accounts }: { accounts: AlegraAccount[] }) {
   }
 
   if (loading) return <p className="text-cream-200/40 text-sm animate-pulse">Cargando comprobantes…</p>;
-  if (error)   return <ErrorBox title="No se pudo cargar los comprobantes" msg={error} />;
+  if (error)   return <ErrorBox msg={error} />;
 
   return (
     <div className="space-y-4">
@@ -258,7 +273,7 @@ function Comprobantes({ accounts }: { accounts: AlegraAccount[] }) {
             </table>
           </div>
           {!balanced && totalD > 0 && (
-            <p className="text-amber-400 text-xs">⚠ Débito y crédito deben ser iguales para cuadrar.</p>
+            <p className="text-amber-400 text-xs">Débito y crédito deben ser iguales para cuadrar.</p>
           )}
           <div className="flex justify-between">
             <button onClick={() => setEntries(p => [...p, { accountId: '', debit: '', credit: '' }])}
@@ -311,7 +326,7 @@ function Facturas() {
   useEffect(() => { load(); }, [load]);
 
   if (loading) return <p className="text-cream-200/40 text-sm animate-pulse">Cargando facturas…</p>;
-  if (error)   return <ErrorBox title="No se pudo cargar facturas" msg={error} />;
+  if (error)   return <ErrorBox msg={error} />;
 
   return (
     <div className="space-y-3">
@@ -367,7 +382,7 @@ function Gastos() {
   useEffect(() => { load(); }, [load]);
 
   if (loading) return <p className="text-cream-200/40 text-sm animate-pulse">Cargando gastos…</p>;
-  if (error)   return <ErrorBox title="No se pudo cargar gastos" msg={error} />;
+  if (error)   return <ErrorBox msg={error} />;
 
   return (
     <div className="space-y-3">
@@ -420,7 +435,7 @@ function Productos() {
   const filtered = items.filter(i => !search || i.name?.toLowerCase().includes(search.toLowerCase()));
 
   if (loading) return <p className="text-cream-200/40 text-sm animate-pulse">Cargando productos y servicios…</p>;
-  if (error)   return <ErrorBox title="No se pudo cargar productos" msg={error} />;
+  if (error)   return <ErrorBox msg={error} />;
 
   return (
     <div className="space-y-4">
@@ -461,40 +476,24 @@ function Productos() {
 
 // ─── Página principal ────────────────────────────────────────────────────────
 export default function AlegraPage() {
-  const [tab, setTab]         = useState<Tab>('cuentas');
+  const [tab, setTab]           = useState<Tab>('facturas');
   const [accounts, setAccounts] = useState<AlegraAccount[]>([]);
   const [connStatus, setConnStatus] = useState<'checking' | 'ok' | 'error'>('checking');
   const [connMsg, setConnMsg]   = useState('');
-  const [diag, setDiag]         = useState<any>(null);
-  const [showDiag, setShowDiag] = useState(false);
-
-  async function runDiag() {
-    setShowDiag(true);
-    try {
-      const res = await fetch('/api/alegra', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ endpoint: '__diag__' }),
-      });
-      setDiag(await res.json());
-    } catch (e: any) {
-      setDiag({ error: e.message });
-    }
-  }
 
   useEffect(() => {
     getContacts()
       .then(() => setConnStatus('ok'))
-      .catch(e => { setConnStatus('error'); setConnMsg(e.message); runDiag(); });
+      .catch(e => { setConnStatus('error'); setConnMsg(e.message); });
     getAccounts().then(setAccounts).catch(() => {});
   }, []);
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'cuentas',      label: 'Plan de cuentas' },
+    { id: 'facturas',     label: 'Facturas'         },
+    { id: 'gastos',       label: 'Gastos'           },
+    { id: 'productos',    label: 'Productos'        },
+    { id: 'cuentas',      label: 'Plan de cuentas'  },
     { id: 'comprobantes', label: 'Comprobantes'     },
-    { id: 'facturas',     label: 'Facturas'          },
-    { id: 'gastos',       label: 'Gastos'            },
-    { id: 'productos',    label: 'Productos'         },
   ];
 
   return (
@@ -503,7 +502,7 @@ export default function AlegraPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-cream-100">Alegra</h1>
-          <p className="text-cream-200/40 text-sm mt-1">Plan de cuentas, comprobantes, facturas y más</p>
+          <p className="text-cream-200/40 text-sm mt-1">Facturas, gastos, productos y contabilidad</p>
         </div>
         <div className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border transition ${
           connStatus === 'ok'
@@ -519,7 +518,7 @@ export default function AlegraPage() {
           }`} />
           {connStatus === 'checking' ? 'Verificando conexión…'
            : connStatus === 'ok'     ? 'Conectado a Alegra'
-           : `Error de conexión — ${connMsg}`}
+           : `Error — ${connMsg}`}
         </div>
       </div>
 
@@ -540,42 +539,13 @@ export default function AlegraPage() {
         ))}
       </div>
 
-      {/* Diagnostic panel — shown automatically on connection error */}
-      {showDiag && diag && (
-        <div className="bg-navy-800/60 border border-amber-500/25 rounded-xl p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-amber-300 text-sm font-semibold">Diagnóstico de conexión</p>
-            <button onClick={() => setShowDiag(false)} className="text-cream-200/40 hover:text-cream-100 text-xs">✕</button>
-          </div>
-          <div className="font-mono text-xs space-y-1 text-cream-200/60">
-            <p>Email: <span className={diag.hasEmail ? 'text-green-400' : 'text-red-400'}>{diag.hasEmail ? `sí (${diag.emailPrefix}…)` : 'NO'}</span></p>
-            <p>Token: <span className={diag.hasToken ? 'text-green-400' : 'text-red-400'}>{diag.hasToken ? `sí (${diag.tokenLen} chars)` : 'NO'}</span></p>
-            {diag.attempts?.map((a: any, i: number) => (
-              <div key={i} className={`mt-1 rounded-lg p-2 space-y-0.5 ${a.status === 200 ? 'bg-green-500/10 border border-green-500/20' : 'bg-navy-950/60'}`}>
-                <p className="text-cream-200/50 text-xs">{a.label}</p>
-                {a.status !== undefined
-                  ? <p>→ <span className={a.status === 200 ? 'text-green-400 font-bold' : a.status === 403 ? 'text-amber-400' : 'text-red-400'}>HTTP {a.status}</span> — <span className="text-cream-200/40 break-all">{a.body}</span></p>
-                  : <p className="text-red-400">→ {a.error}</p>}
-              </div>
-            ))}
-          <div className="mt-3 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-300/80 space-y-1">
-            <p className="font-semibold">¿Qué significa cada código?</p>
-            <p>• <span className="text-red-400">401 Unauthorized</span> → El token no autentica por Basic Auth (plan sin API externa)</p>
-            <p>• <span className="text-amber-400">403 Forbidden</span> → Autenticado por sesión pero sin permiso al endpoint</p>
-            <p>• <span className="text-green-400">200 OK</span> → Conexión exitosa</p>
-            <p className="pt-1">Para activar la REST API en Alegra: <span className="text-white">Configuración → Mi plan → API REST</span></p>
-          </div>
-          </div>
-        </div>
-      )}
-
       {/* Content */}
       <div>
-        {tab === 'cuentas'      && <PlanCuentas />}
-        {tab === 'comprobantes' && <Comprobantes accounts={accounts} />}
         {tab === 'facturas'     && <Facturas />}
         {tab === 'gastos'       && <Gastos />}
         {tab === 'productos'    && <Productos />}
+        {tab === 'cuentas'      && <PlanCuentas />}
+        {tab === 'comprobantes' && <Comprobantes accounts={accounts} />}
       </div>
     </div>
   );

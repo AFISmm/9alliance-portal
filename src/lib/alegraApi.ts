@@ -82,38 +82,15 @@ export interface AlegraItem {
 }
 
 // ── Plan de cuentas ──
-// Alegra Colombia expone el PUC bajo "accounting-account"
 export async function getAccounts(): Promise<AlegraAccount[]> {
-  for (const ep of [
-    'accounting-account?limit=500',
-    'account?limit=500',
-    'accounts?limit=500',
-  ]) {
-    try {
-      const data = await proxy(ep);
-      return toList(data);
-    } catch {
-      // try next endpoint name
-    }
-  }
-  throw new Error('No se encontró el endpoint del plan de cuentas en esta cuenta de Alegra.');
+  const data = await proxy('accounting-account?limit=500');
+  return toList(data);
 }
 
 // ── Comprobantes de diario ──
 export async function getJournals(limit = 50): Promise<AlegraJournal[]> {
-  for (const ep of [
-    `journal-voucher?limit=${limit}&order_field=date&order_direction=desc`,
-    `journal-entry?limit=${limit}&order_field=date&order_direction=desc`,
-    `journals?limit=${limit}&order_field=date&order_direction=desc`,
-  ]) {
-    try {
-      const data = await proxy(ep);
-      return toList(data);
-    } catch {
-      // try next
-    }
-  }
-  throw new Error('No se encontró el endpoint de comprobantes en esta cuenta de Alegra.');
+  const data = await proxy(`journal-voucher?limit=${limit}&order_field=date&order_direction=desc`);
+  return toList(data);
 }
 
 // ── Facturas de venta ──
@@ -124,20 +101,8 @@ export async function getInvoices(limit = 50): Promise<AlegraInvoice[]> {
 
 // ── Gastos / compras ──
 export async function getExpenses(limit = 50): Promise<AlegraExpense[]> {
-  for (const ep of [
-    `bill?limit=${limit}&order_field=date&order_direction=desc`,
-    `expense?limit=${limit}&order_field=date&order_direction=desc`,
-    `bills?limit=${limit}&order_field=date&order_direction=desc`,
-    `expenses?limit=${limit}&order_field=date&order_direction=desc`,
-  ]) {
-    try {
-      const data = await proxy(ep);
-      return toList(data);
-    } catch {
-      // try next
-    }
-  }
-  return [];
+  const data = await proxy(`bill?limit=${limit}&order_field=date&order_direction=desc`);
+  return toList(data);
 }
 
 // ── Productos / servicios ──
@@ -158,13 +123,5 @@ export async function createJournal(payload: {
   description: string;
   entries: Array<{ account: { id: number }; debit: number; credit: number }>;
 }): Promise<AlegraJournal> {
-  // Match endpoint to whichever name the account uses
-  for (const ep of ['journal-voucher', 'journal-entry', 'journals']) {
-    try {
-      return await proxy(ep, 'POST', payload);
-    } catch {
-      // try next
-    }
-  }
-  throw new Error('No se pudo crear el comprobante.');
+  return await proxy('journal-voucher', 'POST', payload);
 }
