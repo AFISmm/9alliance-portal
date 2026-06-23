@@ -47,7 +47,13 @@ function PlanCuentas() {
   );
 
   if (loading) return <p className="text-cream-200/40 text-sm animate-pulse">Cargando plan de cuentas desde Alegra…</p>;
-  if (error) return <p className="text-red-400 text-sm">Error: {error}</p>;
+  if (error) return (
+    <div className="bg-red-500/10 border border-red-500/25 rounded-xl p-4 space-y-2">
+      <p className="text-red-400 text-sm font-medium">No se pudo cargar el plan de cuentas</p>
+      <p className="text-red-400/70 text-xs font-mono">{error}</p>
+      <p className="text-cream-200/40 text-xs">Es posible que el módulo de contabilidad no esté habilitado en tu cuenta de Alegra. Verifica en Alegra → Configuración → Módulos.</p>
+    </div>
+  );
 
   return (
     <div className="space-y-4">
@@ -167,7 +173,13 @@ function Comprobantes({ accounts }: { accounts: AlegraAccount[] }) {
   }
 
   if (loading) return <p className="text-cream-200/40 text-sm animate-pulse">Cargando comprobantes…</p>;
-  if (error) return <p className="text-red-400 text-sm">Error: {error}</p>;
+  if (error) return (
+    <div className="bg-red-500/10 border border-red-500/25 rounded-xl p-4 space-y-2">
+      <p className="text-red-400 text-sm font-medium">No se pudo cargar los comprobantes</p>
+      <p className="text-red-400/70 text-xs font-mono">{error}</p>
+      <p className="text-cream-200/40 text-xs">El módulo de comprobantes de diario puede requerir el plan Contabilidad en Alegra.</p>
+    </div>
+  );
 
   return (
     <div className="space-y-4">
@@ -330,7 +342,12 @@ function Facturas() {
   }, []);
 
   if (loading) return <p className="text-cream-200/40 text-sm animate-pulse">Cargando facturas…</p>;
-  if (error) return <p className="text-red-400 text-sm">Error: {error}</p>;
+  if (error) return (
+    <div className="bg-red-500/10 border border-red-500/25 rounded-xl p-4 space-y-2">
+      <p className="text-red-400 text-sm font-medium">No se pudo cargar las facturas</p>
+      <p className="text-red-400/70 text-xs font-mono">{error}</p>
+    </div>
+  );
 
   return (
     <div className="overflow-x-auto rounded-xl border border-white/10">
@@ -377,8 +394,14 @@ function Facturas() {
 export default function AlegraPage() {
   const [tab, setTab] = useState<Tab>('cuentas');
   const [accounts, setAccounts] = useState<AlegraAccount[]>([]);
+  const [connStatus, setConnStatus] = useState<'checking' | 'ok' | 'error'>('checking');
+  const [connMsg, setConnMsg] = useState('');
 
   useEffect(() => {
+    // Test basic connectivity with contacts (always available in all Alegra plans)
+    getContacts()
+      .then(() => setConnStatus('ok'))
+      .catch(e => { setConnStatus('error'); setConnMsg(e.message); });
     getAccounts().then(setAccounts).catch(() => {});
   }, []);
 
@@ -390,9 +413,23 @@ export default function AlegraPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-cream-100">Alegra</h1>
-        <p className="text-cream-200/40 text-sm mt-1">Plan de cuentas, comprobantes y facturas</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-cream-100">Alegra</h1>
+          <p className="text-cream-200/40 text-sm mt-1">Plan de cuentas, comprobantes y facturas</p>
+        </div>
+        <div className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border ${
+          connStatus === 'ok'       ? 'bg-green-500/10 border-green-500/25 text-green-300' :
+          connStatus === 'error'    ? 'bg-red-500/10 border-red-500/25 text-red-400' :
+                                      'bg-white/5 border-white/10 text-cream-200/40'
+        }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${
+            connStatus === 'ok' ? 'bg-green-400' : connStatus === 'error' ? 'bg-red-400' : 'bg-cream-200/30 animate-pulse'
+          }`} />
+          {connStatus === 'checking' ? 'Verificando conexión…'
+           : connStatus === 'ok'     ? 'Conectado a Alegra'
+           : `Sin conexión — ${connMsg}`}
+        </div>
       </div>
 
       <div className="flex gap-1 bg-navy-900/60 rounded-xl p-1 w-fit">

@@ -22,6 +22,14 @@ export default async function handler(req: any, res: any) {
 
   const url = `https://app.alegra.com/api/r1/${endpoint}`;
   const upstream = await fetch(url, fetchOptions);
-  const data = await upstream.json().catch(() => ({ error: 'Respuesta no JSON de Alegra' }));
-  return res.status(upstream.status).json(data);
+  const data = await upstream.json().catch(() => ({ error: 'Respuesta no JSON de Alegra', endpoint }));
+  if (!upstream.ok) {
+    // Enrich error with HTTP status so client can surface it
+    return res.status(upstream.status).json({
+      ...data,
+      _status: upstream.status,
+      _endpoint: endpoint,
+    });
+  }
+  return res.status(200).json(data);
 }

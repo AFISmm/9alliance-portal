@@ -6,11 +6,11 @@ async function proxy(endpoint: string, method = 'GET', body?: unknown) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ endpoint, method, body }),
   });
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err?.message || `Alegra error ${res.status}`);
+    throw new Error(data?.message || data?.description || `Error ${res.status} — ${endpoint}`);
   }
-  return res.json();
+  return data;
 }
 
 export interface AlegraAccount {
@@ -49,16 +49,38 @@ export interface AlegraInvoice {
   client?: { name: string };
 }
 
-// Plan de cuentas
+// Plan de cuentas — Alegra usa "accounting-account" en v1 Colombia
 export async function getAccounts(): Promise<AlegraAccount[]> {
-  const data = await proxy('accounts?limit=200');
-  return Array.isArray(data) ? data : (data?.data ?? []);
+  // Try the most common Alegra Colombia endpoint names
+  for (const ep of ['accounting-account?limit=500', 'account?limit=500', 'accounts?limit=500']) {
+    try {
+      const data = await proxy(ep);
+      const list = Array.isArray(data) ? data : (data?.data ?? []);
+      if (list.length > 0 || ep.startsWith('accounts')) return list;
+    } catch {
+      // try next endpoint
+    }
+  }
+  return [];
 }
 
 // Comprobantes contables (diario)
 export async function getJournals(limit = 50): Promise<AlegraJournal[]> {
-  const data = await proxy(`journals?limit=${limit}&order_field=date&order_direction=desc`);
-  return Array.isArray(data) ? data : (data?.data ?? []);
+  // Alegra Colombia: journal-voucher or journal-entry or journals
+  for (const ep of [
+    `journal-voucher?limit=${limit}&order_field=date&order_direction=desc`,
+    `journal-entry?limit=${limit}&order_field=date&order_direction=desc`,
+    `journals?limit=${limit}&order_field=date&order_direction=desc`,
+  ]) {
+    try {
+      const data = await proxy(ep);
+      const list = Array.isArray(data) ? data : (data?.data ?? []);
+      return list;
+    } catch {
+      // try next
+    }
+  }
+  return [];
 }
 
 // Facturas / recibos
