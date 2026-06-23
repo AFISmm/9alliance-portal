@@ -13,12 +13,12 @@ export default async function handler(req: any, res: any) {
 
     // Test different base URLs and auth methods
     const tests = [
-      { label: 'r1/contacts — Basic email:token',    url: 'https://app.alegra.com/api/r1/contacts',    auth: `Basic ${basicCreds}` },
-      { label: 'r1/contacts — Bearer token',         url: 'https://app.alegra.com/api/r1/contacts',    auth: `Bearer ${token}` },
-      { label: 'r1/contacts — Token only Basic',     url: 'https://app.alegra.com/api/r1/contacts',    auth: `Basic ${Buffer.from(`:${token}`).toString('base64')}` },
+      { label: 'r1/contacts — Basic email:token',    url: 'https://api.alegra.com/r1/contacts',    auth: `Basic ${basicCreds}` },
+      { label: 'r1/contacts — Bearer token',         url: 'https://api.alegra.com/r1/contacts',    auth: `Bearer ${token}` },
+      { label: 'r1/contacts — Token only Basic',     url: 'https://api.alegra.com/r1/contacts',    auth: `Basic ${Buffer.from(`:${token}`).toString('base64')}` },
       { label: 'r2/contacts — Basic email:token',    url: 'https://app.alegra.com/api/r2/contacts',    auth: `Basic ${basicCreds}` },
-      { label: 'r1/ (base) — Basic email:token',     url: 'https://app.alegra.com/api/r1/',            auth: `Basic ${basicCreds}` },
-      { label: 'r1/contacts NO auth',                url: 'https://app.alegra.com/api/r1/contacts',    auth: '' },
+      { label: 'r1/ (base) — Basic email:token',     url: 'https://api.alegra.com/r1/',            auth: `Basic ${basicCreds}` },
+      { label: 'r1/contacts NO auth',                url: 'https://api.alegra.com/r1/contacts',    auth: '' },
     ];
 
     for (const t of tests) {
@@ -60,7 +60,7 @@ export default async function handler(req: any, res: any) {
     fetchOptions.body = JSON.stringify(body);
   }
 
-  const url = `https://app.alegra.com/api/r1/${endpoint}`;
+  const url = `https://api.alegra.com/r1/${endpoint}`;
   const upstream = await fetch(url, fetchOptions);
   const data = await upstream.json().catch(() => ({ error: 'Respuesta no JSON de Alegra', endpoint }));
   if (!upstream.ok) {
