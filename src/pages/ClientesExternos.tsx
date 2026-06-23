@@ -12,7 +12,7 @@ export default function ClientesExternos() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <h1 className="text-2xl font-semibold text-cream-100">{t('nav.clientesExternos')}</h1>
+      <h1 className="text-2xl font-semibold text-cream-100">Clientes</h1>
 
       <div>
         <label className="block text-sm text-cream-200/60 mb-1.5">{t('clientes.seleccionar')}</label>

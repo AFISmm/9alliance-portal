@@ -23,7 +23,7 @@ export function ClientList() {
         aria-expanded={open}
       >
         <span className="font-medium">
-          {t('nav.clientesExternos')}
+          Clientes
           <span className="ml-1.5 text-xs text-gold-400 bg-gold-500/10 px-1.5 py-0.5 rounded-full">
             {clients.length}
           </span>
