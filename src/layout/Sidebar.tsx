@@ -10,6 +10,7 @@ const navItems = [
   { key: 'clientesExternos', path: '/clientes',    exact: false },
   { key: 'calculadoras',     path: '/calculadoras',exact: false },
   { key: 'indicadores',      path: '/indicadores', exact: false },
+  { key: 'alegra',           path: '/alegra',      exact: false },
 ] as const;
 
 export function Sidebar() {

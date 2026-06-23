@@ -10,6 +10,7 @@ import ClientesExternos from './pages/ClientesExternos';
 import ClientDetail from './pages/ClientDetail';
 import Calculadoras from './pages/Calculadoras';
 import Indicadores from './pages/Indicadores';
+import AlegraPage from './pages/AlegraPage';
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="cliente/:id" element={<ClientDetail />} />
             <Route path="calculadoras" element={<Calculadoras />} />
             <Route path="indicadores" element={<Indicadores />} />
+            <Route path="alegra" element={<AlegraPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

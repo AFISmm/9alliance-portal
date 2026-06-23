@@ -5,7 +5,8 @@
     "clientesExternos": "Clientes externos",
     "calculadoras": "Calculadoras",
     "indicadores": "Indicadores",
-    "cerrarSesion": "Cerrar sesión"
+    "cerrarSesion": "Cerrar sesión",
+    "alegra": "Alegra"
   },
   "auth": {
     "iniciarSesion": "Iniciar sesión",

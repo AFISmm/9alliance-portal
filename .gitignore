@@ -24,3 +24,10 @@ dev/
 # Logs
 *.log
 npm-debug.log*
+
+.vercel
+
+# Credenciales externas (nunca commitear)
+APIkeyAlegra.txt
+*.key
+*.credentials
