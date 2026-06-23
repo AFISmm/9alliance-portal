@@ -554,10 +554,17 @@ export default function AlegraPage() {
               <div key={i} className={`mt-1 rounded-lg p-2 space-y-0.5 ${a.status === 200 ? 'bg-green-500/10 border border-green-500/20' : 'bg-navy-950/60'}`}>
                 <p className="text-cream-200/50 text-xs">{a.label}</p>
                 {a.status !== undefined
-                  ? <p>→ <span className={a.status === 200 ? 'text-green-400 font-bold' : 'text-red-400'}>HTTP {a.status}</span> — <span className="text-cream-200/40 break-all">{a.body}</span></p>
+                  ? <p>→ <span className={a.status === 200 ? 'text-green-400 font-bold' : a.status === 403 ? 'text-amber-400' : 'text-red-400'}>HTTP {a.status}</span> — <span className="text-cream-200/40 break-all">{a.body}</span></p>
                   : <p className="text-red-400">→ {a.error}</p>}
               </div>
             ))}
+          <div className="mt-3 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-300/80 space-y-1">
+            <p className="font-semibold">¿Qué significa cada código?</p>
+            <p>• <span className="text-red-400">401 Unauthorized</span> → El token no autentica por Basic Auth (plan sin API externa)</p>
+            <p>• <span className="text-amber-400">403 Forbidden</span> → Autenticado por sesión pero sin permiso al endpoint</p>
+            <p>• <span className="text-green-400">200 OK</span> → Conexión exitosa</p>
+            <p className="pt-1">Para activar la REST API en Alegra: <span className="text-white">Configuración → Mi plan → API REST</span></p>
+          </div>
           </div>
         </div>
       )}
