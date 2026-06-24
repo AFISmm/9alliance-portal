@@ -50,8 +50,9 @@ function deriveAllCodes(rows: PucRow[]): PucRow[] {
 }
 
 function parentCode(code: string): string | null {
-  if (code.length <= 2) return null;
-  return code.slice(0, code.length - 2);
+  if (code.length <= 1) return null;          // "1" → raíz absoluta
+  if (code.length === 2) return code[0];      // "11" → "1"
+  return code.slice(0, code.length - 2);      // "1105"→"11", "110505"→"1105", etc.
 }
 
 // ─── File parsers ─────────────────────────────────────────────────────────────
@@ -252,19 +253,9 @@ export function PlanCuentasUploader() {
         continue;
       }
 
-      // Find parent ID
+      // Find parent ID (undefined → crear sin idParent, Alegra lo acepta como raíz)
       const pCode = parentCode(row.code);
       const parentId = pCode ? codeToId.get(pCode) : undefined;
-
-      // Top-level (1-digit) codes must already exist in Alegra
-      if (!pCode && !codeToId.has(row.code)) {
-        errors++;
-        const msg = `Clase raíz ${row.code} no encontrada en Alegra. Configura el catálogo PUC primero.`;
-        allResults.push({ code: row.code, name: row.name, status: 'error', msg });
-        addLog(`  ✗ ${row.code}: ${msg}`);
-        setProgress({ done: i + 1, total, ok, exists, errors });
-        continue;
-      }
 
       try {
         const acc = await createAccount({
