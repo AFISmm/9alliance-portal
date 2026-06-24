@@ -354,10 +354,12 @@ export async function uploadJournal(params: {
     observations: params.comprobante,
     entries: params.entries.map(e => ({
       account: { id: e.accountId },
-      debit: e.debito,
-      credit: e.credito,
-      description: e.detalle || params.comprobante,
-      ...(e.contactId ? { contact: { id: e.contactId } } : {}),
+      // Alegra rechaza 0 explícito — solo enviar el campo con valor
+      ...(e.debito  > 0 ? { debit:  e.debito  } : {}),
+      ...(e.credito > 0 ? { credit: e.credito } : {}),
+      description: (e.detalle || params.comprobante).slice(0, 255),
+      // contact.id debe ser número entero
+      ...(e.contactId ? { contact: { id: Number(e.contactId) } } : {}),
     })),
   });
 }
