@@ -234,6 +234,14 @@ export function PlanCuentasUploader() {
       addLog(`✗ ${e.message}`); setPhase('parsed'); return;
     }
 
+    // Pre-flight: si Alegra tiene 0 cuentas PUC, el catálogo no está configurado
+    if (codeToId.size === 0) {
+      setCatalogError(true);
+      addLog('⚠ Alegra tiene 0 cuentas. Debes activar el catálogo PUC en Alegra antes de subir.');
+      setPhase('parsed');
+      return;
+    }
+
     setPhase('uploading');
     const toUpload = withHierarchy;
     const total = toUpload.length;
@@ -272,7 +280,7 @@ export function PlanCuentasUploader() {
       } catch (e: any) {
         const msg = String(e.message ?? e);
         const isdup = msg.includes('422') || msg.toLowerCase().includes('ya existe') || msg.includes('32006');
-        const isCatalogError = msg.includes('31113') || msg.toLowerCase().includes('catálogo') || msg.toLowerCase().includes('catalogo');
+        const isCatalogError = msg.includes('31113') || msg.toLowerCase().includes('catálogo') || msg.toLowerCase().includes('catalogo') || msg.toLowerCase().includes('cuenta contable padre');
 
         if (isCatalogError) {
           setCatalogError(true);
@@ -323,16 +331,25 @@ export function PlanCuentasUploader() {
 
       {/* Catalog error banner */}
       {catalogError && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex gap-3">
-          <span className="text-2xl shrink-0">⚙️</span>
-          <div className="space-y-1">
-            <p className="text-amber-300 font-semibold text-sm">Catálogo PUC no configurado en Alegra</p>
-            <p className="text-cream-200/55 text-xs">
-              Antes de subir el plan de cuentas, debes seleccionar el catálogo PUC en Alegra:
+        <div className="bg-amber-500/10 border border-amber-500/40 rounded-xl p-5 flex gap-4">
+          <span className="text-3xl shrink-0">⚙️</span>
+          <div className="space-y-2">
+            <p className="text-amber-300 font-semibold">Paso previo requerido en Alegra</p>
+            <p className="text-cream-200/70 text-sm">
+              Alegra no tiene cuentas PUC. Debes activar el catálogo PUC <strong className="text-cream-100">una sola vez</strong> en la configuración de Alegra:
             </p>
-            <p className="text-cream-200/55 text-xs font-mono">
-              Alegra → Configuración → Contabilidad → Catálogo de cuentas → PUC
-            </p>
+            <ol className="text-cream-200/65 text-sm space-y-1 list-decimal list-inside">
+              <li>Inicia sesión en <span className="text-gold-300 font-mono">app.alegra.com</span></li>
+              <li>Ve a <span className="text-cream-100">Configuración → Contabilidad</span></li>
+              <li>Busca <span className="text-cream-100">Plan de cuentas</span> y selecciona <span className="text-cream-100">PUC Colombia</span></li>
+              <li>Guarda los cambios y vuelve aquí a subir el archivo</li>
+            </ol>
+            <button
+              onClick={() => setCatalogError(false)}
+              className="text-xs text-amber-400/60 hover:text-amber-300 mt-1"
+            >
+              Entendido — ya lo configuré, intentar de nuevo →
+            </button>
           </div>
         </div>
       )}
