@@ -357,11 +357,15 @@ export async function uploadJournal(params: {
 }): Promise<AlegraJournal> {
   const payload = {
     date: params.date,
+    description: params.comprobante,
     observations: params.comprobante,
     entries: params.entries.map(e => ({
       account: { id: Number(e.accountId) },
       ...(e.debito  > 0 ? { debit:  e.debito  } : {}),
       ...(e.credito > 0 ? { credit: e.credito } : {}),
+      ...(e.detalle ? { description: e.detalle.slice(0, 255) } : {}),
+      ...(e.contactId && isFinite(Number(e.contactId)) && Number(e.contactId) > 0
+          ? { contact: { id: Number(e.contactId) } } : {}),
     })),
   };
   console.log('[uploadJournal]', params.comprobante, JSON.stringify(payload));
