@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import {
   excelSerialToISO, getAllAccountsMap, getAllContactsMap,
-  createTercero, uploadJournal, exportToCSV,
+  createTercero, uploadJournal, exportToCSV, getNumberTemplates,
   type JournalRow, type AccountDetail,
 } from '../../lib/alegraApi';
 
@@ -189,6 +189,26 @@ export function MigradorComprobantes() {
       addLog(`✓ ${contactsMap.size} contactos cargados`);
     } catch (e: any) { addLog(`✗ ${e.message}`); setPhase('parsed'); return; }
 
+    // ── 2b. Buscar plantilla de numeración de comprobantes ────────────────
+    let numberTemplateId: number | undefined;
+    try {
+      const templates = await getNumberTemplates();
+      const journalTpl = templates.find((t: any) => {
+        const type = String(t.type || '').toLowerCase();
+        return type.includes('journal') || type.includes('diary') || type.includes('diario') || type.includes('comprobante');
+      });
+      if (journalTpl) {
+        numberTemplateId = Number(journalTpl.id);
+        addLog(`✓ Plantilla: "${journalTpl.name}" tipo=${journalTpl.type} id=${numberTemplateId}`);
+      } else if (templates.length > 0) {
+        addLog(`⚠ Plantillas disponibles: ${templates.slice(0, 5).map((t: any) => `${t.name}(${t.type})`).join(', ')}`);
+      } else {
+        addLog('⚠ Sin plantillas de numeración — se intentará sin plantilla');
+      }
+    } catch (e: any) {
+      addLog(`⚠ No se cargaron plantillas: ${e.message}`);
+    }
+
     // ── 3. Crear contactos faltantes ─────────────────────────────────────
     const nitsFaltantes = [...uniqueNits].filter(n => !contactsMap.has(n));
     if (nitsFaltantes.length > 0) {
@@ -307,7 +327,7 @@ export function MigradorComprobantes() {
         addLog(`[PAYLOAD] ${JSON.stringify(preview)}`);
       }
       try {
-        await uploadJournal({ date: g.fecha, comprobante: g.comprobante, entries });
+        await uploadJournal({ date: g.fecha, comprobante: g.comprobante, entries, numberTemplateId });
 
         let status: ResultStatus = 'ok';
         let msg = 'Creado';

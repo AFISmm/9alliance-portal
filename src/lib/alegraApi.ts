@@ -13,8 +13,9 @@ async function proxy(endpoint: string, method = 'GET', body?: unknown) {
     const firstErr = errArr[0];
     const field    = firstErr?.field || firstErr?.param || '';
     const detail   = firstErr?.message || firstErr?.description || '';
+    const rawSnip  = JSON.stringify(data).slice(0, 300);
     const extra    = [field && `campo: ${field}`, detail && detail !== topMsg && detail].filter(Boolean).join(' — ');
-    throw new Error(extra ? `${topMsg} [${extra}]` : topMsg);
+    throw new Error(extra ? `${topMsg} [${extra}] | raw:${rawSnip}` : `${topMsg} | raw:${rawSnip}`);
   }
   return data;
 }
@@ -138,6 +139,11 @@ export interface AlegraItem {
 }
 
 // ── READ ──────────────────────────────────────────────────────────────────────
+
+export async function getNumberTemplates(): Promise<any[]> {
+  const data = await proxy('number-templates');
+  return toList(data);
+}
 
 export async function getAccounts(): Promise<AlegraAccount[]> {
   const data = await proxy('categories?limit=500');
@@ -354,11 +360,13 @@ export async function uploadJournal(params: {
   date: string;
   comprobante: string;
   entries: JournalRow[];
+  numberTemplateId?: number;
 }): Promise<AlegraJournal> {
-  const payload = {
+  const payload: Record<string, unknown> = {
     date: params.date,
     description: params.comprobante,
     observations: params.comprobante,
+    ...(params.numberTemplateId ? { numberTemplate: { id: params.numberTemplateId } } : {}),
     entries: params.entries.map(e => ({
       account: { id: Number(e.accountId) },
       ...(e.debito  > 0 ? { debit:  e.debito  } : {}),
