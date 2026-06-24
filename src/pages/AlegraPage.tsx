@@ -5,10 +5,11 @@ import {
   type AlegraAccount, type AlegraJournal, type AlegraInvoice,
   type AlegraExpense, type AlegraItem, type AlegraContact,
 } from '../lib/alegraApi';
-import { MigradorComprobantes } from '../components/alegra/MigradorComprobantes';
-import { ImportarTerceros }     from '../components/alegra/ImportarTerceros';
+import { MigradorComprobantes }  from '../components/alegra/MigradorComprobantes';
+import { ImportarTerceros }      from '../components/alegra/ImportarTerceros';
+import { PlanCuentasUploader }   from '../components/alegra/PlanCuentasUploader';
 
-type Tab = 'facturas' | 'gastos' | 'productos' | 'contactos' | 'cuentas' | 'comprobantes' | 'migrador' | 'terceros';
+type Tab = 'facturas' | 'gastos' | 'productos' | 'contactos' | 'cuentas' | 'comprobantes' | 'plan-cuentas' | 'migrador' | 'terceros';
 
 function fmt(n: number) {
   return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n);
@@ -829,9 +830,10 @@ export default function AlegraPage() {
     { id: 'productos',    label: 'Productos'               },
     { id: 'contactos',    label: 'Contactos'               },
     { id: 'cuentas',      label: 'Plan de cuentas'         },
-    { id: 'comprobantes', label: 'Comprobantes'            },
-    { id: 'migrador',     label: 'Migrador',    icon: '📒' },
-    { id: 'terceros',     label: 'Terceros',    icon: '👥' },
+    { id: 'comprobantes', label: 'Comprobantes'                  },
+    { id: 'plan-cuentas', label: 'Plan de Cuentas', icon: '📋' },
+    { id: 'migrador',     label: 'Migrador',         icon: '📒' },
+    { id: 'terceros',     label: 'Terceros',          icon: '👥' },
   ];
 
   return (
@@ -876,6 +878,7 @@ export default function AlegraPage() {
         {tab === 'contactos'    && <Contactos />}
         {tab === 'cuentas'      && <PlanCuentas />}
         {tab === 'comprobantes' && <Comprobantes accounts={accounts} />}
+        {tab === 'plan-cuentas' && <PlanCuentasUploader />}
         {tab === 'migrador'     && <MigradorComprobantes />}
         {tab === 'terceros'     && <ImportarTerceros />}
       </div>

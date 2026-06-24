@@ -210,6 +210,35 @@ export async function createItem(payload: {
   });
 }
 
+// ── PUC type / nature mapping ─────────────────────────────────────────────────
+export const PUC_TYPE: Record<string, string> = {
+  '1': 'asset', '2': 'liability', '3': 'equity',
+  '4': 'income', '5': 'expense', '6': 'expense', '7': 'expense',
+  '8': 'asset', '9': 'liability',
+};
+export const PUC_NATURE: Record<string, string> = {
+  '1': 'debit', '2': 'credit', '3': 'credit',
+  '4': 'credit', '5': 'debit', '6': 'debit', '7': 'debit',
+  '8': 'debit', '9': 'credit',
+};
+
+export async function createAccount(payload: {
+  name: string;
+  code: string;
+  type?: string;
+  nature?: string;
+  idParent?: string;
+}): Promise<AlegraAccount> {
+  const clase = payload.code.trim()[0] ?? '1';
+  return proxy('categories', 'POST', {
+    name: payload.name.slice(0, 100),
+    code: payload.code.trim(),
+    type:   payload.type   ?? PUC_TYPE[clase]   ?? 'asset',
+    nature: payload.nature ?? PUC_NATURE[clase] ?? 'debit',
+    ...(payload.idParent ? { idParent: payload.idParent } : {}),
+  });
+}
+
 // ── Bulk helpers ───────────────────────────────────────────────────────────────
 
 export function excelSerialToISO(serial: number): string {
