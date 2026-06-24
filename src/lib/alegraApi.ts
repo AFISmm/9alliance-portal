@@ -358,17 +358,11 @@ export async function uploadJournal(params: {
   const payload = {
     date: params.date,
     observations: params.comprobante,
-    entries: params.entries.map(e => {
-      const contactIdNum = e.contactId !== undefined ? Number(e.contactId) : NaN;
-      const contactValid = isFinite(contactIdNum) && contactIdNum > 0;
-      return {
-        account: { id: Number(e.accountId) },
-        ...(e.debito  > 0 ? { debit:  e.debito  } : {}),
-        ...(e.credito > 0 ? { credit: e.credito } : {}),
-        description: (e.detalle || params.comprobante).slice(0, 255) || undefined,
-        ...(contactValid ? { contact: { id: contactIdNum } } : {}),
-      };
-    }),
+    entries: params.entries.map(e => ({
+      account: { id: Number(e.accountId) },
+      ...(e.debito  > 0 ? { debit:  e.debito  } : {}),
+      ...(e.credito > 0 ? { credit: e.credito } : {}),
+    })),
   };
   console.log('[uploadJournal]', params.comprobante, JSON.stringify(payload));
   return proxy('journals', 'POST', payload);

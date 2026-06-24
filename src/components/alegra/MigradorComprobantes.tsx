@@ -300,10 +300,11 @@ export function MigradorComprobantes() {
 
       // Upload
       if (i === 0) {
-        addLog(`[DEBUG] ${g.comprobante} | ${g.fecha} | ${entries.length} entradas`);
-        entries.forEach((e, idx) => {
-          addLog(`[DEBUG] [${idx}] acc=${e.accountId} d=${e.debito} c=${e.credito} contactId=${e.contactId ?? '-'} detalle="${e.detalle.slice(0, 40)}"`);
-        });
+        const totalD = entries.reduce((s, e) => s + e.debito, 0);
+        const totalC = entries.reduce((s, e) => s + e.credito, 0);
+        addLog(`[DEBUG] ${g.comprobante} | ${g.fecha} | ${entries.length} entradas | D=${totalD.toFixed(2)} C=${totalC.toFixed(2)}`);
+        const preview = { date: g.fecha, obs: g.comprobante, entries: entries.map(e => ({ acc: Number(e.accountId), ...(e.debito > 0 ? { d: e.debito } : {}), ...(e.credito > 0 ? { c: e.credito } : {}) })) };
+        addLog(`[PAYLOAD] ${JSON.stringify(preview)}`);
       }
       try {
         await uploadJournal({ date: g.fecha, comprobante: g.comprobante, entries });
