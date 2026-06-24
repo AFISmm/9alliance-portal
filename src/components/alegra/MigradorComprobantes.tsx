@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import {
   excelSerialToISO, getAllAccountsMap, getAllContactsMap,
-  createTercero, uploadJournal, exportToCSV, findActiveParent,
+  createTercero, uploadJournal, exportToCSV,
   type JournalRow, type AccountDetail,
 } from '../../lib/alegraApi';
 
@@ -37,29 +37,54 @@ interface Result {
 
 // ── Parser ────────────────────────────────────────────────────────────────────
 
+// Normaliza texto: quita acentos, espacios y pasa a mayúsculas para comparar headers
+function norm(s: string): string {
+  return String(s).toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+}
+
 function parseAuxiliar(buf: ArrayBuffer): AuxRow[] {
   const wb = XLSX.read(buf, { type: 'array' });
   const ws = wb.Sheets[wb.SheetNames[0]];
   const raw = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: '' });
 
+  // Busca fila de encabezados: debe tener COMPROBANTE y DEBITO(S)
   let headerIdx = -1;
   for (let i = 0; i < Math.min(15, raw.length); i++) {
-    const joined = raw[i].map((c: any) => String(c).toUpperCase()).join('|');
-    if (joined.includes('COMPROBANTE') && (joined.includes('DEBITO') || joined.includes('DÉBITO'))) {
+    const joined = raw[i].map((c: any) => norm(String(c))).join('|');
+    if (joined.includes('COMPROBANTE') && joined.includes('DEBIT')) {
       headerIdx = i; break;
     }
   }
   if (headerIdx < 0) throw new Error('No se encontró fila de encabezados (COMPROBANTE / DEBITOS). Verifica el formato del archivo.');
 
+  // Detecta columnas dinámicamente por nombre
+  const headers = raw[headerIdx].map((c: any) => norm(String(c)));
+  const col = (frag: string) => headers.findIndex(h => h.includes(frag));
+
+  const fechaCol   = col('FECHA');
+  const compCol    = col('COMPROBANTE');
+  const numeroCol  = col('NUMERO');
+  const nitCol     = col('NIT');
+  const nombreCol  = col('SOCIAL') >= 0 ? col('SOCIAL') : col('NOMBRE');
+  const cuentaCol  = col('CUENTA');
+  const detalleCol = col('DETALLE');
+  const debitoCol  = col('DEBIT');
+  const creditoCol = col('CREDIT');
+
   const rows: AuxRow[] = [];
   for (let i = headerIdx + 1; i < raw.length; i++) {
     const r = raw[i];
-    const comp     = String(r[8] ?? '').trim();
-    const fechaRaw = r[9];
-    if (!comp || !fechaRaw) continue;
 
-    const debito  = parseFloat(String(r[15] ?? '0').replace(',', '.')) || 0;
-    const credito = parseFloat(String(r[16] ?? '0').replace(',', '.')) || 0;
+    const compType = compCol >= 0 ? String(r[compCol] ?? '').trim() : '';
+    const numero   = numeroCol >= 0 ? String(r[numeroCol] ?? '').trim() : '';
+    // Clave única por documento: tipo+numero (e.g. "F-003-00000001984")
+    const comprobanteKey = numero ? `${compType}-${numero}` : compType;
+
+    const fechaRaw = fechaCol >= 0 ? r[fechaCol] : r[9];
+    if (!comprobanteKey || !fechaRaw) continue;
+
+    const debito  = debitoCol  >= 0 ? parseFloat(String(r[debitoCol]  ?? '0').replace(',', '.')) || 0 : 0;
+    const credito = creditoCol >= 0 ? parseFloat(String(r[creditoCol] ?? '0').replace(',', '.')) || 0 : 0;
     if (debito === 0 && credito === 0) continue;
 
     const fecha = typeof fechaRaw === 'number'
@@ -67,12 +92,12 @@ function parseAuxiliar(buf: ArrayBuffer): AuxRow[] {
       : String(fechaRaw).trim();
 
     rows.push({
-      cuenta:      String(r[1] ?? '').trim(),
-      nit:         String(r[4] ?? '').trim(),
-      nombre:      String(r[7] ?? '').trim(),
-      comprobante: comp,
+      cuenta:      cuentaCol  >= 0 ? String(r[cuentaCol]  ?? '').trim() : '',
+      nit:         nitCol     >= 0 ? String(r[nitCol]      ?? '').replace(/\s+/g, '') : '',
+      nombre:      nombreCol  >= 0 ? String(r[nombreCol]   ?? '').trim() : '',
+      comprobante: comprobanteKey,
       fecha,
-      detalle:     String(r[10] ?? '').trim(),
+      detalle:     detalleCol >= 0 ? String(r[detalleCol]  ?? '').trim() : '',
       debito,
       credito,
     });
@@ -210,24 +235,20 @@ export function MigradorComprobantes() {
         let accId   = codeToId.get(accCode);
 
         if (!accId) {
-          // Account not in Alegra at all
-          missingAccounts.push(accCode);
-          continue;
-        }
-
-        const detail = accDetails.get(accCode);
-        if (detail?.blocked) {
-          // Account is disabled — find active parent
-          const parent = findActiveParent(accCode, accDetails);
-          if (parent) {
-            substitutions.push(`${detail.name} → ${parent.name}`);
-            accCode = parent.code;
-            accId   = parent.id;
-          } else {
-            addLog(`  ⚠ Sin ancestro activo para '${detail.name}' (${accCode}) — omitida`);
-            missingAccounts.push(accCode);
-            continue;
+          // Código exacto no existe (ej: 10 dígitos Siigo → truncar a 8/6/4/2)
+          let truncated = accCode;
+          while (truncated.length > 2) {
+            truncated = truncated.length % 2 === 0
+              ? truncated.slice(0, -2)
+              : truncated.slice(0, -1);
+            if (codeToId.has(truncated)) {
+              substitutions.push(`${accCode} → ${truncated}`);
+              accCode = truncated;
+              accId   = codeToId.get(truncated)!;
+              break;
+            }
           }
+          if (!accId) { missingAccounts.push(r.cuenta); continue; }
         }
 
         const contactId = (r.nit && r.nit !== '0') ? contactsMap.get(r.nit) : undefined;

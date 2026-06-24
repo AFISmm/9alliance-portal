@@ -282,7 +282,7 @@ export async function getAllAccountsMap(): Promise<{
   for (const a of flat) {
     if (!a.code) continue;
     const code = a.code.trim();
-    const blocked = !!(a.blocked || a.readOnly);
+    const blocked = a.blocked === 'yes' || a.readOnly === true;
     codeToId.set(code, a.id);
     details.set(code, { id: a.id, code, name: a.name, blocked });
   }
