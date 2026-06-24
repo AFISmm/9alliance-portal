@@ -56,14 +56,16 @@ function parseCsvOrSimpleXlsx(buf: ArrayBuffer, fileName: string): TerceroInput[
       }))
       .filter(r => r.nit && r.nombre);
   }
-  // xlsx with NIT, NOMBRE columns
+  // xlsx: read by position (col 0 = NIT/ID, col 1 = nombre) — ignores header name variants
   const wb = XLSX.read(buf, { type: 'array' });
   const ws = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json<any>(ws, { defval: '' });
-  return rows
-    .map((r: any) => ({
-      nit: String(r.NIT ?? r.nit ?? r.IDENTIFICACION ?? r.identificacion ?? '').replace(/[^0-9]/g, ''),
-      nombre: String(r['RAZÓN SOCIAL'] ?? r['RAZON SOCIAL'] ?? r['Razón Social'] ?? r['Razon Social'] ?? r.NOMBRE ?? r.nombre ?? r.NAME ?? r.name ?? '').trim(),
+  const raw = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: '' });
+  if (raw.length < 2) return [];
+  // Skip header row (row 0), read col 0 = nit, col 1 = nombre
+  return raw.slice(1)
+    .map((r: any[]) => ({
+      nit:    String(r[0] ?? '').replace(/[^0-9]/g, ''),
+      nombre: String(r[1] ?? '').trim(),
     }))
     .filter((r: TerceroInput) => r.nit && r.nombre);
 }
