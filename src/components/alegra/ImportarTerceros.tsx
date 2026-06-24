@@ -15,8 +15,14 @@ type Phase = 'idle' | 'preview' | 'checking' | 'running' | 'done';
 
 function detectIdType(nit: string): { tipo: string; persona: string } {
   const digits = nit.replace(/[^0-9]/g, '');
-  if (digits.length >= 8 && (digits.startsWith('8') || digits.startsWith('9'))) {
+  if ((digits.length === 9 || digits.length === 10) && (digits.startsWith('8') || digits.startsWith('9'))) {
     return { tipo: 'NIT', persona: 'Empresa' };
+  }
+  if (digits.length === 10 && digits.startsWith('1')) {
+    return { tipo: 'CC', persona: 'Persona natural' };
+  }
+  if (digits.length <= 7) {
+    return { tipo: 'CC', persona: 'Persona natural' };
   }
   return { tipo: 'CC', persona: 'Persona natural' };
 }

@@ -306,16 +306,32 @@ export interface TerceroInput {
 
 export async function createTercero(t: TerceroInput): Promise<AlegraContact> {
   const digits = t.nit.replace(/[^0-9]/g, '');
-  const isEmpresa = digits.length >= 8 && (digits.startsWith('8') || digits.startsWith('9'));
-  return proxy('contacts', 'POST', {
-    name: t.nombre.trim() || digits,
+  // NIT empresas: 9 dígitos que empiezan con 8 o 9, o 10 dígitos con 8/9
+  const isEmpresa = (digits.length === 9 || digits.length === 10) &&
+    (digits.startsWith('8') || digits.startsWith('9'));
+  const nombre = t.nombre.trim() || digits;
+
+  const body: Record<string, unknown> = {
     identificationObject: {
       type: isEmpresa ? 'NIT' : 'CC',
       number: digits,
     },
     kindOfPerson: isEmpresa ? 'LEGAL_ENTITY' : 'PERSON_ENTITY',
     type: ['client', 'vendor'],
-  });
+  };
+
+  if (isEmpresa) {
+    body.name = nombre;
+  } else {
+    // Persona natural: Alegra requiere nameObject en lugar de name
+    const parts = nombre.split(/\s+/);
+    body.nameObject = {
+      firstName: parts[0] ?? nombre,
+      lastName:  parts.slice(1).join(' ') || parts[0] || nombre,
+    };
+  }
+
+  return proxy('contacts', 'POST', body);
 }
 
 export interface JournalRow {
