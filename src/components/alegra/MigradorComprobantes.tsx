@@ -299,6 +299,11 @@ export function MigradorComprobantes() {
       }
 
       // Upload
+      if (i === 0) {
+        addLog(`[DEBUG] ${g.comprobante} | ${g.fecha} | ${entries.length} líneas`);
+        const e0 = entries[0];
+        addLog(`[DEBUG] entrada[0]: accId=${e0.accountId} d=${e0.debito} c=${e0.credito} nit=${e0.nit}`);
+      }
       try {
         await uploadJournal({ date: g.fecha, comprobante: g.comprobante, entries });
 

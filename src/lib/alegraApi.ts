@@ -8,7 +8,13 @@ async function proxy(endpoint: string, method = 'GET', body?: unknown) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data?.message || data?.description || `Error ${res.status} — ${endpoint}`);
+    const topMsg   = data?.message || data?.description || `Error ${res.status} — ${endpoint}`;
+    const errArr   = Array.isArray(data?.errors) ? data.errors : [];
+    const firstErr = errArr[0];
+    const field    = firstErr?.field || firstErr?.param || '';
+    const detail   = firstErr?.message || firstErr?.description || '';
+    const extra    = [field && `campo: ${field}`, detail && detail !== topMsg && detail].filter(Boolean).join(' — ');
+    throw new Error(extra ? `${topMsg} [${extra}]` : topMsg);
   }
   return data;
 }
@@ -349,17 +355,17 @@ export async function uploadJournal(params: {
   comprobante: string;
   entries: JournalRow[];
 }): Promise<AlegraJournal> {
-  return proxy('journals', 'POST', {
+  const payload = {
     date: params.date,
     observations: params.comprobante,
     entries: params.entries.map(e => ({
-      account: { id: e.accountId },
-      // Alegra rechaza 0 explícito — solo enviar el campo con valor
+      account: { id: Number(e.accountId) },
       ...(e.debito  > 0 ? { debit:  e.debito  } : {}),
       ...(e.credito > 0 ? { credit: e.credito } : {}),
-      description: (e.detalle || params.comprobante).slice(0, 255),
-      // contact.id debe ser número entero
+      description: (e.detalle || params.comprobante).slice(0, 255) || undefined,
       ...(e.contactId ? { contact: { id: Number(e.contactId) } } : {}),
     })),
-  });
+  };
+  console.log('[uploadJournal]', params.comprobante, JSON.stringify(payload));
+  return proxy('journals', 'POST', payload);
 }
