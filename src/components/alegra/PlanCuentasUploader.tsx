@@ -80,6 +80,31 @@ function parseAuxiliarPUC(buf: ArrayBuffer): PucRow[] {
   return [...codeMap.entries()].map(([code, name]) => ({ code, name }));
 }
 
+// Handles Siigo "Plan de Cuentas / Numerico" export (headers: CUENTA, DESCRIPCION; codes are numbers)
+function parseSiigoPlanCuentas(buf: ArrayBuffer): PucRow[] {
+  const wb = XLSX.read(buf, { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const raw = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: '' });
+
+  let headerIdx = -1;
+  for (let i = 0; i < Math.min(15, raw.length); i++) {
+    const col0 = String(raw[i][0] ?? '').toUpperCase().trim();
+    if (col0 === 'CUENTA' || col0.startsWith('CUENTA')) { headerIdx = i; break; }
+  }
+  if (headerIdx < 0) return [];
+
+  const rows: PucRow[] = [];
+  for (let i = headerIdx + 1; i < raw.length; i++) {
+    const code = String(raw[i][0] ?? '').trim();
+    const name = String(raw[i][1] ?? '').trim();
+    if (!code || !name) continue;
+    if (code.length >= 2 && /^\d+$/.test(code)) {
+      rows.push({ code, name });
+    }
+  }
+  return rows;
+}
+
 function parseSimpleXlsx(buf: ArrayBuffer): PucRow[] {
   const wb = XLSX.read(buf, { type: 'array' });
   const ws = wb.Sheets[wb.SheetNames[0]];
@@ -168,11 +193,17 @@ export function PlanCuentasUploader() {
         rows = parseAuxiliarPUC(buf);
         addLog(`Formato AUXILIAR Siigo detectado. ${rows.length} códigos PUC únicos extraídos.`);
       } else {
-        rows = parseSimpleXlsx(buf);
-        addLog(`Formato tabla detectado. ${rows.length} cuentas.`);
+        // Try Siigo "CUENTA/DESCRIPCION" format first, fall back to standard "CODIGO/NOMBRE"
+        rows = parseSiigoPlanCuentas(buf);
+        if (rows.length) {
+          addLog(`Formato Siigo CUENTA/DESCRIPCION detectado. ${rows.length} cuentas.`);
+        } else {
+          rows = parseSimpleXlsx(buf);
+          addLog(`Formato tabla detectado. ${rows.length} cuentas.`);
+        }
       }
 
-      if (!rows.length) throw new Error('No se encontraron códigos PUC válidos. Columnas esperadas: CODIGO, NOMBRE');
+      if (!rows.length) throw new Error('No se encontraron códigos PUC válidos. Formatos soportados: CUENTA/DESCRIPCION (Siigo), CODIGO/NOMBRE (estándar), CSV');
 
       const hierarchy = deriveAllCodes(rows);
       setParsed(rows);
@@ -408,7 +439,7 @@ export function PlanCuentasUploader() {
         <div>
           <h4 className="text-cream-100 font-medium text-sm">Subir Plan de Cuentas</h4>
           <p className="text-cream-200/35 text-xs mt-0.5">
-            Acepta: AUXILIAR.xlsx (extrae PUC) · Excel simple (CODIGO, NOMBRE) · CSV (CODIGO, NOMBRE)
+            Acepta: Plan de Cuentas Siigo (CUENTA/DESCRIPCION) · AUXILIAR.xlsx · Excel (CODIGO, NOMBRE) · CSV
           </p>
         </div>
 
