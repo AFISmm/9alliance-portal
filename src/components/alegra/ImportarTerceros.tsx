@@ -63,7 +63,7 @@ function parseCsvOrSimpleXlsx(buf: ArrayBuffer, fileName: string): TerceroInput[
   return rows
     .map((r: any) => ({
       nit: String(r.NIT ?? r.nit ?? r.IDENTIFICACION ?? r.identificacion ?? '').replace(/[^0-9]/g, ''),
-      nombre: String(r.NOMBRE ?? r.nombre ?? r.NAME ?? r.name ?? '').trim(),
+      nombre: String(r['RAZÓN SOCIAL'] ?? r['RAZON SOCIAL'] ?? r['Razón Social'] ?? r['Razon Social'] ?? r.NOMBRE ?? r.nombre ?? r.NAME ?? r.name ?? '').trim(),
     }))
     .filter((r: TerceroInput) => r.nit && r.nombre);
 }
