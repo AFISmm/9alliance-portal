@@ -364,16 +364,16 @@ export async function uploadJournal(params: {
 }): Promise<AlegraJournal> {
   const payload: Record<string, unknown> = {
     date: params.date,
-    description: params.comprobante,
-    observations: params.comprobante,
+    reference:    params.comprobante.slice(0, 255),
+    observations: params.comprobante.slice(0, 500),
     ...(params.numberTemplateId ? { numberTemplate: { id: params.numberTemplateId } } : {}),
     entries: params.entries.map(e => ({
-      account: { id: Number(e.accountId) },
-      ...(e.debito  > 0 ? { debit:  e.debito  } : {}),
-      ...(e.credito > 0 ? { credit: e.credito } : {}),
+      id: Number(e.accountId),
+      ...(e.debito  > 0 ? { debit:  Math.round(e.debito  * 100) / 100 } : {}),
+      ...(e.credito > 0 ? { credit: Math.round(e.credito * 100) / 100 } : {}),
       ...(e.detalle ? { description: e.detalle.slice(0, 255) } : {}),
       ...(e.contactId && isFinite(Number(e.contactId)) && Number(e.contactId) > 0
-          ? { contact: { id: Number(e.contactId) } } : {}),
+          ? { client: { id: Number(e.contactId) } } : {}),
     })),
   };
   console.log('[uploadJournal]', params.comprobante, JSON.stringify(payload));

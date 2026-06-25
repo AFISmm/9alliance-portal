@@ -193,53 +193,20 @@ export function MigradorComprobantes() {
     let numberTemplateId: number | undefined;
     try {
       const templates = await getNumberTemplates();
-      // Log full structure of first template to understand field names
-      if (templates.length > 0) {
-        addLog(`[TPL JSON] ${JSON.stringify(templates[0]).slice(0, 400)}`);
-      }
       const journalTpl = templates.find((t: any) => {
-        const type   = String(t.type          || t.documentType || '').toLowerCase();
-        const name   = String(t.name          || '').toLowerCase();
-        const target = String(t.target        || '').toLowerCase();
+        const type = String(t.type || t.documentType || '').toLowerCase();
+        const name = String(t.name || '').toLowerCase();
         return type.includes('journal') || type.includes('diary') || type.includes('diario')
-            || name.includes('diario')  || name.includes('journal')
-            || target.includes('journal');
+            || name.includes('diario')  || name.includes('journal');
       });
       if (journalTpl) {
         numberTemplateId = Number(journalTpl.id);
         addLog(`✓ Plantilla diario: "${journalTpl.name}" id=${numberTemplateId}`);
-      } else if (templates.length > 0) {
-        addLog(`⚠ Sin plantilla de diario. Disponibles: ${templates.slice(0, 8).map((t: any) => `"${t.name}"(id=${t.id})`).join(', ')}`);
-        addLog('ℹ Para crear comprobantes, ve a Alegra → Configuración → Plantillas de numeración → Comprobante de diario');
       } else {
-        addLog('⚠ Sin plantillas de numeración — se intentará sin plantilla');
+        addLog(`ℹ Sin plantilla de diario configurada — se usará numeración automática`);
       }
     } catch (e: any) {
       addLog(`⚠ No se cargaron plantillas: ${e.message}`);
-    }
-
-    // ── 2c. Test mínimo de API con cuentas HOJA (6+ dígitos PUC) ────────────
-    {
-      // Buscar dos cuentas hoja (código PUC de 6+ dígitos, sin bloqueo) para probar
-      const leafPairs = [...accDetails.entries()]
-        .filter(([code, d]) => code.length >= 6 && !d.blocked)
-        .map(([code, d]) => ({ code, id: Number(d.id) }))
-        .filter(x => isFinite(x.id) && x.id > 0);
-      if (leafPairs.length >= 2) {
-        const a1 = leafPairs[0], a2 = leafPairs[1];
-        addLog(`[TEST] Probando con cuentas hoja: ${a1.code}(id=${a1.id}) y ${a2.code}(id=${a2.id})`);
-        try {
-          await uploadJournal({ date: '2026-01-02', comprobante: 'TEST MIGRADOR', entries: [
-            { accountCode: a1.code, accountId: String(a1.id), nit: '', detalle: 'test', debito: 0, credito: 1 },
-            { accountCode: a2.code, accountId: String(a2.id), nit: '', detalle: 'test', debito: 1, credito: 0 },
-          ], numberTemplateId });
-          addLog('[TEST ✓] API funciona con cuentas hoja — journal de prueba creado');
-        } catch (e: any) {
-          addLog(`[TEST ✗] ${e.message.slice(0, 250)}`);
-        }
-      } else {
-        addLog(`[TEST] No hay cuentas hoja (6+ dígitos) disponibles — ${leafPairs.length} encontradas`);
-      }
     }
 
     // ── 3. Crear contactos faltantes ─────────────────────────────────────
@@ -351,24 +318,12 @@ export function MigradorComprobantes() {
         }
       }
 
-      // Upload
-      if (i === 0) {
-        const totalD = entries.reduce((s, e) => s + e.debito, 0);
-        const totalC = entries.reduce((s, e) => s + e.credito, 0);
-        addLog(`[DEBUG] ${g.comprobante} | ${g.fecha} | ${entries.length} entradas | D=${totalD.toFixed(2)} C=${totalC.toFixed(2)}`);
-        // Mostrar PUC code + blocked status de cada cuenta
-        const idToCode = new Map([...accDetails.entries()].map(([code, d]) => [d.id, { code, blocked: d.blocked }]));
-        entries.forEach((e, idx) => {
-          const info = idToCode.get(e.accountId ?? '') ?? idToCode.get(String(Number(e.accountId)));
-          addLog(`[ENTRY${idx}] pucCode=${info?.code ?? '?'} blocked=${info?.blocked} id=${e.accountId} d=${e.debito} c=${e.credito}`);
-        });
-      }
       try {
         await uploadJournal({ date: g.fecha, comprobante: g.comprobante, entries, numberTemplateId });
 
         let status: ResultStatus = 'ok';
         let msg = 'Creado';
-        if (wasInverted && substitutions.length) { status = 'substituted'; msg = `Invertido + sustituido: ${substitutions.join(', ')}`; }
+        if (wasInverted && substitutions.length) { status = 'substituted'; msg = `Invertido + sustituido: ${substitutions.join(', ')}`; substituted++; }
         else if (wasInverted)         { status = 'inverted';    msg = 'Invertido (débito↔crédito)'; inverted++; }
         else if (substitutions.length){ status = 'substituted'; msg = `Cuenta sustituida: ${substitutions.join(', ')}`; substituted++; }
         else ok++;
