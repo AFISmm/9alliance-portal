@@ -253,22 +253,26 @@ export function MigradorComprobantes() {
       for (const r of g.rows) {
         let accCode = r.cuenta;
         let accId   = codeToId.get(accCode);
+        const acctBlocked = (code: string) => accDetails.get(code)?.blocked ?? false;
 
-        if (!accId) {
-          // Código exacto no existe (ej: 10 dígitos Siigo → truncar a 8/6/4/2)
+        if (!accId || acctBlocked(accCode)) {
+          // Account not found or blocked → truncate to nearest active parent
+          const startCode = accCode;
           let truncated = accCode;
+          let foundParent = false;
           while (truncated.length > 2) {
             truncated = truncated.length % 2 === 0
               ? truncated.slice(0, -2)
               : truncated.slice(0, -1);
-            if (codeToId.has(truncated)) {
-              substitutions.push(`${accCode} → ${truncated}`);
+            if (codeToId.has(truncated) && !acctBlocked(truncated)) {
+              substitutions.push(`${startCode} → ${truncated}`);
               accCode = truncated;
               accId   = codeToId.get(truncated)!;
+              foundParent = true;
               break;
             }
           }
-          if (!accId) { missingAccounts.push(r.cuenta); continue; }
+          if (!foundParent) { missingAccounts.push(r.cuenta); continue; }
         }
 
         const contactId = (r.nit && r.nit !== '0') ? contactsMap.get(r.nit) : undefined;
