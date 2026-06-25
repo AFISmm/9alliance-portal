@@ -193,20 +193,55 @@ export function MigradorComprobantes() {
     let numberTemplateId: number | undefined;
     try {
       const templates = await getNumberTemplates();
+      // Log full structure of first template to understand field names
+      if (templates.length > 0) {
+        addLog(`[TPL JSON] ${JSON.stringify(templates[0]).slice(0, 400)}`);
+      }
       const journalTpl = templates.find((t: any) => {
-        const type = String(t.type || '').toLowerCase();
-        return type.includes('journal') || type.includes('diary') || type.includes('diario') || type.includes('comprobante');
+        const type   = String(t.type          || t.documentType || '').toLowerCase();
+        const name   = String(t.name          || '').toLowerCase();
+        const target = String(t.target        || '').toLowerCase();
+        return type.includes('journal') || type.includes('diary') || type.includes('diario')
+            || name.includes('diario')  || name.includes('journal')
+            || target.includes('journal');
       });
       if (journalTpl) {
         numberTemplateId = Number(journalTpl.id);
-        addLog(`✓ Plantilla: "${journalTpl.name}" tipo=${journalTpl.type} id=${numberTemplateId}`);
+        addLog(`✓ Plantilla diario: "${journalTpl.name}" id=${numberTemplateId}`);
       } else if (templates.length > 0) {
-        addLog(`⚠ Plantillas disponibles: ${templates.slice(0, 5).map((t: any) => `${t.name}(${t.type})`).join(', ')}`);
+        addLog(`⚠ Sin plantilla de diario. Disponibles: ${templates.slice(0, 8).map((t: any) => `"${t.name}"(id=${t.id})`).join(', ')}`);
+        addLog('ℹ Para crear comprobantes, ve a Alegra → Configuración → Plantillas de numeración → Comprobante de diario');
       } else {
         addLog('⚠ Sin plantillas de numeración — se intentará sin plantilla');
       }
     } catch (e: any) {
       addLog(`⚠ No se cargaron plantillas: ${e.message}`);
+    }
+
+    // ── 2c. Test mínimo de API ─────────────────────────────────────────────
+    {
+      const accIds = [...codeToId.values()].slice(0, 2).map(Number).filter(n => isFinite(n) && n > 0);
+      if (accIds.length >= 2) {
+        addLog(`[TEST] Probando API con cuentas ${accIds[0]} y ${accIds[1]}…`);
+        try {
+          const testPayload: Record<string, unknown> = {
+            date: '2026-01-02',
+            description: 'TEST MIGRADOR',
+            entries: [
+              { account: { id: accIds[0] }, credit: 1 },
+              { account: { id: accIds[1] }, debit:  1 },
+            ],
+          };
+          if (numberTemplateId) (testPayload as any).numberTemplate = { id: numberTemplateId };
+          await uploadJournal({ date: '2026-01-02', comprobante: 'TEST MIGRADOR', entries: [
+            { accountCode: '', accountId: String(accIds[0]), nit: '', detalle: 'test', debito: 0, credito: 1 },
+            { accountCode: '', accountId: String(accIds[1]), nit: '', detalle: 'test', debito: 1, credito: 0 },
+          ], numberTemplateId });
+          addLog('[TEST ✓] API funciona — journal de prueba creado');
+        } catch (e: any) {
+          addLog(`[TEST ✗] ${e.message.slice(0, 200)}`);
+        }
+      }
     }
 
     // ── 3. Crear contactos faltantes ─────────────────────────────────────
