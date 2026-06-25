@@ -81,6 +81,52 @@ function parseAuxiliarPUC(buf: ArrayBuffer): PucRow[] {
   return [...codeMap.entries()].map(([code, name]) => ({ code, name }));
 }
 
+// Handles Siigo "Modelo Cuentas Contables" export (columns: GRUPO, CUENTA, SUB CUENTA, AUXILIAR, SUB AUXILIAR, DESCRIPCIÓN, DISPONIBLE)
+function parseSiigoGrupoFormat(buf: ArrayBuffer): PucRow[] {
+  const wb = XLSX.read(buf, { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const raw = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: '' });
+
+  let headerIdx = -1;
+  for (let i = 0; i < Math.min(15, raw.length); i++) {
+    const joined = raw[i].map((c: any) => String(c).toUpperCase()).join('|');
+    if (joined.includes('GRUPO') && joined.includes('AUXILIAR') && joined.includes('DESCRIPCI')) {
+      headerIdx = i; break;
+    }
+  }
+  if (headerIdx < 0) return [];
+
+  const pad = (v: string) => v.padStart(2, '0');
+  const rows: PucRow[] = [];
+
+  for (let i = headerIdx + 1; i < raw.length; i++) {
+    const r = raw[i];
+    const grupo  = String(r[0] ?? '').trim();
+    const cuenta = String(r[1] ?? '').trim();
+    const subCta = String(r[2] ?? '').trim();
+    const aux    = String(r[3] ?? '').trim();
+    const subAux = String(r[4] ?? '').trim();
+    const desc   = String(r[5] ?? '').trim();
+
+    if (!grupo || !/^\d+$/.test(grupo)) continue;
+
+    const g  = pad(grupo);
+    const c  = cuenta  && cuenta  !== '0' ? pad(cuenta)  : '';
+    const sc = subCta  && subCta  !== '0' ? pad(subCta)  : '';
+    const a  = aux     && aux     !== '0' ? pad(aux)     : '';
+    const sa = subAux  && subAux  !== '0' ? pad(subAux)  : '';
+
+    let code = g;
+    if (c)  code = g + c;
+    if (sc) code = g + c + sc;
+    if (a)  code = g + c + sc + a;
+    if (sa) code = g + c + sc + a + sa;
+
+    rows.push({ code, name: desc || `Cuenta ${code}` });
+  }
+  return rows;
+}
+
 // Handles Siigo "Plan de Cuentas / Numerico" export (headers: CUENTA, DESCRIPCION; codes are numbers)
 function parseSiigoPlanCuentas(buf: ArrayBuffer): PucRow[] {
   const wb = XLSX.read(buf, { type: 'array' });
@@ -194,13 +240,19 @@ export function PlanCuentasUploader() {
         rows = parseAuxiliarPUC(buf);
         addLog(`Formato AUXILIAR Siigo detectado. ${rows.length} códigos PUC únicos extraídos.`);
       } else {
-        // Try Siigo "CUENTA/DESCRIPCION" format first, fall back to standard "CODIGO/NOMBRE"
-        rows = parseSiigoPlanCuentas(buf);
+        // Try Siigo "GRUPO/CUENTA/SUB_CUENTA/AUXILIAR" format first (Modelo Cuentas Contables)
+        rows = parseSiigoGrupoFormat(buf);
         if (rows.length) {
-          addLog(`Formato Siigo CUENTA/DESCRIPCION detectado. ${rows.length} cuentas.`);
+          addLog(`Formato Siigo GRUPO/AUXILIAR detectado. ${rows.length} cuentas.`);
         } else {
-          rows = parseSimpleXlsx(buf);
-          addLog(`Formato tabla detectado. ${rows.length} cuentas.`);
+          // Try Siigo "CUENTA/DESCRIPCION" format
+          rows = parseSiigoPlanCuentas(buf);
+          if (rows.length) {
+            addLog(`Formato Siigo CUENTA/DESCRIPCION detectado. ${rows.length} cuentas.`);
+          } else {
+            rows = parseSimpleXlsx(buf);
+            addLog(`Formato tabla detectado. ${rows.length} cuentas.`);
+          }
         }
       }
 
