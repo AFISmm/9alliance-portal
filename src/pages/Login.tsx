@@ -32,7 +32,7 @@ export default function Login() {
         <div className="flex justify-center mb-8">
           <Logo9A size={100} />
         </div>
-        <h1 className="text-2xl font-semibold text-cream-100 text-center mb-1">9 Alliance</h1>
+        <h1 className="text-2xl text-cream-100 text-center mb-1" style={{ fontFamily: "'Playfair Display', Georgia, serif", fontStyle: 'italic', fontWeight: 400 }}>9 Alliance</h1>
         <p className="text-gold-400 text-center text-sm mb-8">{t('auth.portal')}</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
