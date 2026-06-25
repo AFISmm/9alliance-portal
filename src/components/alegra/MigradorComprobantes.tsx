@@ -218,29 +218,27 @@ export function MigradorComprobantes() {
       addLog(`⚠ No se cargaron plantillas: ${e.message}`);
     }
 
-    // ── 2c. Test mínimo de API ─────────────────────────────────────────────
+    // ── 2c. Test mínimo de API con cuentas HOJA (6+ dígitos PUC) ────────────
     {
-      const accIds = [...codeToId.values()].slice(0, 2).map(Number).filter(n => isFinite(n) && n > 0);
-      if (accIds.length >= 2) {
-        addLog(`[TEST] Probando API con cuentas ${accIds[0]} y ${accIds[1]}…`);
+      // Buscar dos cuentas hoja (código PUC de 6+ dígitos, sin bloqueo) para probar
+      const leafPairs = [...accDetails.entries()]
+        .filter(([code, d]) => code.length >= 6 && !d.blocked)
+        .map(([code, d]) => ({ code, id: Number(d.id) }))
+        .filter(x => isFinite(x.id) && x.id > 0);
+      if (leafPairs.length >= 2) {
+        const a1 = leafPairs[0], a2 = leafPairs[1];
+        addLog(`[TEST] Probando con cuentas hoja: ${a1.code}(id=${a1.id}) y ${a2.code}(id=${a2.id})`);
         try {
-          const testPayload: Record<string, unknown> = {
-            date: '2026-01-02',
-            description: 'TEST MIGRADOR',
-            entries: [
-              { account: { id: accIds[0] }, credit: 1 },
-              { account: { id: accIds[1] }, debit:  1 },
-            ],
-          };
-          if (numberTemplateId) (testPayload as any).numberTemplate = { id: numberTemplateId };
           await uploadJournal({ date: '2026-01-02', comprobante: 'TEST MIGRADOR', entries: [
-            { accountCode: '', accountId: String(accIds[0]), nit: '', detalle: 'test', debito: 0, credito: 1 },
-            { accountCode: '', accountId: String(accIds[1]), nit: '', detalle: 'test', debito: 1, credito: 0 },
+            { accountCode: a1.code, accountId: String(a1.id), nit: '', detalle: 'test', debito: 0, credito: 1 },
+            { accountCode: a2.code, accountId: String(a2.id), nit: '', detalle: 'test', debito: 1, credito: 0 },
           ], numberTemplateId });
-          addLog('[TEST ✓] API funciona — journal de prueba creado');
+          addLog('[TEST ✓] API funciona con cuentas hoja — journal de prueba creado');
         } catch (e: any) {
-          addLog(`[TEST ✗] ${e.message.slice(0, 200)}`);
+          addLog(`[TEST ✗] ${e.message.slice(0, 250)}`);
         }
+      } else {
+        addLog(`[TEST] No hay cuentas hoja (6+ dígitos) disponibles — ${leafPairs.length} encontradas`);
       }
     }
 
@@ -358,8 +356,12 @@ export function MigradorComprobantes() {
         const totalD = entries.reduce((s, e) => s + e.debito, 0);
         const totalC = entries.reduce((s, e) => s + e.credito, 0);
         addLog(`[DEBUG] ${g.comprobante} | ${g.fecha} | ${entries.length} entradas | D=${totalD.toFixed(2)} C=${totalC.toFixed(2)}`);
-        const preview = { date: g.fecha, obs: g.comprobante, entries: entries.map(e => ({ acc: Number(e.accountId), ...(e.debito > 0 ? { d: e.debito } : {}), ...(e.credito > 0 ? { c: e.credito } : {}) })) };
-        addLog(`[PAYLOAD] ${JSON.stringify(preview)}`);
+        // Mostrar PUC code + blocked status de cada cuenta
+        const idToCode = new Map([...accDetails.entries()].map(([code, d]) => [d.id, { code, blocked: d.blocked }]));
+        entries.forEach((e, idx) => {
+          const info = idToCode.get(e.accountId ?? '') ?? idToCode.get(String(Number(e.accountId)));
+          addLog(`[ENTRY${idx}] pucCode=${info?.code ?? '?'} blocked=${info?.blocked} id=${e.accountId} d=${e.debito} c=${e.credito}`);
+        });
       }
       try {
         await uploadJournal({ date: g.fecha, comprobante: g.comprobante, entries, numberTemplateId });
