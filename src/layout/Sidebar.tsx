@@ -3,12 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home, Building2, Target, Wallet, Briefcase,
   SlidersHorizontal, Info, ChevronDown, ChevronRight, LogOut,
+  UserCog, FlaskConical, X,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Logo9A } from '../components/Logo9A';
-import { realClients } from '../data/clients';
-import { useAuth } from '../auth/AuthContext';
-import { LanguageSwitcher } from '../components/LanguageSwitcher';
+import { Logo9A }                    from '../components/Logo9A';
+import { realClients, demoClients }  from '../data/clients';
+import { useAuth }                   from '../auth/AuthContext';
+import { useDemo }                   from '../context/DemoContext';
 
 const topItems: Array<{ label: string; path: string; Icon: LucideIcon }> = [
   { label: 'INICIO', path: '/inicio', Icon: Home },
@@ -44,7 +45,10 @@ export function Sidebar() {
   const navigate  = useNavigate();
   const location  = useLocation();
   const { user, signOut } = useAuth();
+  const { isDemoMode, exitDemo } = useDemo();
   const [empresasOpen, setEmpresasOpen] = useState(false);
+
+  const activeClients = isDemoMode ? demoClients : realClients;
 
   function isActive(path: string) {
     if (path === '/empresas')
@@ -55,6 +59,15 @@ export function Sidebar() {
   const activeEmpresaId = location.pathname.startsWith('/empresa/')
     ? location.pathname.split('/')[2]
     : null;
+
+  function handleExitDemo() {
+    exitDemo();
+    navigate('/login');
+  }
+
+  const displayName = (user?.user_metadata?.display_name as string | undefined) || user?.email?.split('@')[0] || 'Usuario';
+  const email       = user?.email ?? '';
+  const initials    = email ? getInitials(email) : (isDemoMode ? 'DM' : 'U');
 
   return (
     <aside className="w-60 min-w-[240px] bg-navy-950 border-r border-white/8 flex flex-col shrink-0 min-h-screen">
@@ -67,6 +80,17 @@ export function Sidebar() {
           <p className="text-cream-200/30 text-[9px] tracking-[0.12em] uppercase">Portal Administrativo</p>
         </div>
       </div>
+
+      {/* Demo banner */}
+      {isDemoMode && (
+        <div className="mx-3 mt-3 mb-1 flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(201,168,76,.1)', border: '1px solid rgba(201,168,76,.3)' }}>
+          <FlaskConical size={13} strokeWidth={1.9} className="text-gold-400 shrink-0" />
+          <span className="text-gold-400 text-[10.5px] font-semibold tracking-wide flex-1">MODO DEMO</span>
+          <button onClick={handleExitDemo} className="text-gold-400/50 hover:text-gold-400 transition-colors" title="Salir del demo">
+            <X size={12} strokeWidth={2} />
+          </button>
+        </div>
+      )}
 
       {/* Nav */}
       <nav className="flex-1 px-3.5 py-4">
@@ -104,7 +128,7 @@ export function Sidebar() {
 
             {empresasOpen && (
               <div className="mt-0.5 mb-1 space-y-px">
-                {realClients.map(c => (
+                {activeClients.map(c => (
                   <button
                     key={c.id}
                     onClick={() => navigate(`/empresa/${c.id}`)}
@@ -122,7 +146,7 @@ export function Sidebar() {
           </div>
         </div>
 
-        {/* Section items con separador */}
+        {/* Section items */}
         <div className="mt-4 space-y-0.5">
           {sectionItems.map(({ label, path, Icon }) => (
             <button key={path} onClick={() => navigate(path)} className={rowCls(isActive(path))}>
@@ -135,37 +159,67 @@ export function Sidebar() {
         </div>
       </nav>
 
-      {/* Language switcher */}
-      <div className="border-t border-white/8 px-4 py-2.5 flex items-center justify-between">
-        <span className="text-cream-200/30 text-[9.5px] tracking-widest font-medium uppercase">Idioma</span>
-        <LanguageSwitcher />
-      </div>
-
       {/* User + logout */}
-      <div className="border-t border-white/8 px-3.5 py-3 space-y-2">
-        <div className="flex items-center gap-2.5">
-          <div
-            className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[11px] font-bold"
-            style={{ background: 'linear-gradient(135deg,#d4b96a,#C9A84C)', color: '#0d1829' }}
+      <div className="border-t border-white/8 px-3.5 py-3 space-y-1.5">
+        {isDemoMode ? (
+          /* Demo user card */
+          <div className="flex items-center gap-2.5 px-1 py-1">
+            <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[11px] font-bold"
+              style={{ background: 'rgba(201,168,76,.15)', border: '1px solid rgba(201,168,76,.3)', color: '#C9A84C' }}>
+              DM
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-cream-100 text-[12px] font-semibold truncate leading-tight">Usuario Demo</p>
+              <p className="text-gold-400/60 text-[10px] truncate leading-tight">Modo de exploración</p>
+            </div>
+          </div>
+        ) : (
+          /* Real user card */
+          <div className="flex items-center gap-2.5 px-1 py-1">
+            <div
+              className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[11px] font-bold"
+              style={{ background: 'linear-gradient(135deg,#d4b96a,#C9A84C)', color: '#0d1829' }}
+            >
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-cream-100 text-[12px] font-semibold truncate leading-tight">{displayName}</p>
+              <p className="text-cream-200/35 text-[10px] truncate leading-tight">{email}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Perfil (solo usuarios reales) */}
+        {!isDemoMode && (
+          <button
+            onClick={() => navigate('/perfil')}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-[11.5px] font-medium ${
+              isActive('/perfil') ? 'text-gold-400 bg-gold-500/10' : 'text-cream-200/50 hover:text-cream-100 hover:bg-white/5'
+            }`}
           >
-            {user?.email ? getInitials(user.email) : 'U'}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-cream-100 text-[12px] font-semibold truncate leading-tight">
-              {user?.email?.split('@')[0] ?? 'Usuario'}
-            </p>
-            <p className="text-cream-200/35 text-[10px] truncate leading-tight">
-              {user?.email ?? ''}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={signOut}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-cream-200/50 hover:text-red-400 hover:bg-red-400/8 transition-colors text-[11.5px] font-medium"
-        >
-          <LogOut size={13} strokeWidth={1.9} className="shrink-0" />
-          Cerrar sesión
-        </button>
+            <UserCog size={13} strokeWidth={1.9} className="shrink-0" />
+            Mi perfil
+          </button>
+        )}
+
+        {/* Logout / exit demo */}
+        {isDemoMode ? (
+          <button
+            onClick={handleExitDemo}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-gold-400/60 hover:text-gold-400 hover:bg-gold-500/8 transition-colors text-[11.5px] font-medium"
+          >
+            <X size={13} strokeWidth={1.9} className="shrink-0" />
+            Salir del demo
+          </button>
+        ) : (
+          <button
+            onClick={signOut}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-cream-200/50 hover:text-red-400 hover:bg-red-400/8 transition-colors text-[11.5px] font-medium"
+          >
+            <LogOut size={13} strokeWidth={1.9} className="shrink-0" />
+            Cerrar sesión
+          </button>
+        )}
       </div>
     </aside>
   );

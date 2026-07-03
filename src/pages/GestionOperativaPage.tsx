@@ -5,7 +5,7 @@ import {
   Calendar, Briefcase, CheckCircle2, ArrowRight,
   Download, Upload, Plus, Clock, AlertCircle,
   Monitor, Smartphone, KeyRound, Users, ClipboardList,
-  FolderOpen, ChevronRight,
+  FolderOpen, ChevronRight, Lock, Eye, EyeOff,
 } from 'lucide-react';
 
 // ── 9 Alliance palette ─────────────────────────────────────────────────────
@@ -19,6 +19,9 @@ const BLUE    = '#4A7FD4';
 
 const DARK = { page: NAVY950, card: NAVY900, line: NAVY800, t1: '#F8F7F4', t2: '#AEBCCD', t3: '#7C8A9C', track: NAVY800, goldBg: 'rgba(201,168,76,.1)', blueBg: 'rgba(74,127,212,.12)' };
 type Tk = typeof DARK;
+
+// Admin access key (base64-encoded for basic obfuscation in bundle)
+const ADMIN_KEY = atob('OUFsbGlhbmNlMjAyNg==');
 
 type Role = 'empleado' | 'admin';
 
@@ -653,7 +656,38 @@ export default function GestionOperativaPage() {
   const [role,    setRole]    = useState<Role>('empleado');
   const [empMod,  setEmpMod]  = useState<EmpMod>('inicio');
   const [admMod,  setAdmMod]  = useState<AdmMod>('resumen');
+  const [adminAuthed,    setAdminAuthed]    = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminPass,      setAdminPass]      = useState('');
+  const [adminShowPass,  setAdminShowPass]  = useState(false);
+  const [adminError,     setAdminError]     = useState('');
+  const [adminLoading,   setAdminLoading]   = useState(false);
   const today = useMemo(() => new Date(), []);
+
+  function handleRoleClick(r: Role) {
+    if (r === 'admin' && !adminAuthed) {
+      setShowAdminModal(true);
+      setAdminPass('');
+      setAdminError('');
+    } else {
+      setRole(r);
+    }
+  }
+
+  async function handleAdminSubmit() {
+    setAdminLoading(true);
+    setAdminError('');
+    await new Promise(res => setTimeout(res, 400));
+    if (adminPass === ADMIN_KEY) {
+      setAdminAuthed(true);
+      setRole('admin');
+      setShowAdminModal(false);
+      setAdminPass('');
+    } else {
+      setAdminError('Credenciales incorrectas. Verifica la clave de administración.');
+    }
+    setAdminLoading(false);
+  }
 
   // Dark theme fixed (consistent with portal's navy palette)
   const tk = DARK;
@@ -698,7 +732,7 @@ export default function GestionOperativaPage() {
         {/* Role toggle */}
         <div style={{ position: 'relative', display: 'flex', background: 'rgba(255,255,255,.06)', border: `1px solid ${NAVY800}`, borderRadius: 9, padding: 3 }}>
           {(['empleado', 'admin'] as Role[]).map(r => (
-            <button key={r} onClick={() => setRole(r)}
+            <button key={r} onClick={() => handleRoleClick(r)}
               style={{ appearance: 'none', border: 0, cursor: 'pointer', padding: '6px 16px', borderRadius: 7, fontFamily: 'Inter, sans-serif', fontSize: 12.5, fontWeight: 600, background: role === r ? GOLD : 'transparent', color: role === r ? NAVY950 : '#7C8A9C', transition: 'background .18s, color .18s', whiteSpace: 'nowrap' }}>
               {r === 'empleado' ? 'Portal Empleado' : 'Administración'}
             </button>
@@ -738,6 +772,62 @@ export default function GestionOperativaPage() {
           </>
         )}
       </div>
+
+      {/* ── Admin credentials modal ── */}
+      {showAdminModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(13,24,41,.85)', backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: NAVY900, border: `1px solid ${NAVY800}`, borderRadius: 16, padding: '32px 28px', width: '100%', maxWidth: 400, boxShadow: '0 24px 64px rgba(0,0,0,.6)', fontFamily: "'DM Sans', sans-serif" }}>
+            <div style={{ width: 52, height: 52, borderRadius: 13, background: DARK.goldBg, border: `1px solid ${GOLD}44`, display: 'grid', placeItems: 'center', color: GOLD, margin: '0 auto 20px' }}>
+              <Lock size={22} strokeWidth={1.75} />
+            </div>
+            <h2 style={{ margin: '0 0 6px', textAlign: 'center', fontSize: 18, fontWeight: 700, color: DARK.t1, fontFamily: 'Inter, sans-serif' }}>Acceso Administrador</h2>
+            <p style={{ margin: '0 0 24px', textAlign: 'center', fontSize: 13, color: DARK.t3, lineHeight: 1.5 }}>
+              Ingresa la clave de administración para acceder al panel de gestión.
+            </p>
+            <div style={{ position: 'relative', marginBottom: adminError ? 12 : 20 }}>
+              <input
+                type={adminShowPass ? 'text' : 'password'}
+                value={adminPass}
+                onChange={e => { setAdminPass(e.target.value); setAdminError(''); }}
+                onKeyDown={e => { if (e.key === 'Enter' && adminPass) handleAdminSubmit(); }}
+                placeholder="Clave de administración"
+                autoFocus
+                style={{ width: '100%', boxSizing: 'border-box', background: NAVY950, border: `1px solid ${adminError ? '#F87171' : NAVY800}`, borderRadius: 9, padding: '11px 44px 11px 14px', color: DARK.t1, fontSize: 14, fontFamily: "'DM Sans', sans-serif", outline: 'none' }}
+              />
+              <button
+                type="button"
+                onClick={() => setAdminShowPass(p => !p)}
+                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: DARK.t3, padding: 4, display: 'flex', alignItems: 'center' }}
+              >
+                {adminShowPass ? <EyeOff size={16} strokeWidth={1.75} /> : <Eye size={16} strokeWidth={1.75} />}
+              </button>
+            </div>
+            {adminError && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(248,113,113,.1)', border: '1px solid rgba(248,113,113,.25)', borderRadius: 8, padding: '8px 12px', marginBottom: 20 }}>
+                <AlertCircle size={14} strokeWidth={2} style={{ color: '#F87171', flexShrink: 0 }} />
+                <span style={{ fontSize: 12.5, color: '#FCA5A5' }}>{adminError}</span>
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => { setShowAdminModal(false); setAdminPass(''); setAdminError(''); }}
+                style={{ flex: 1, padding: '10px 0', borderRadius: 9, background: 'transparent', border: `1px solid ${NAVY800}`, color: DARK.t2, fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAdminSubmit}
+                disabled={!adminPass || adminLoading}
+                style={{ flex: 1, padding: '10px 0', borderRadius: 9, background: adminPass && !adminLoading ? GOLD : `${GOLD}55`, border: 'none', color: adminPass && !adminLoading ? NAVY950 : `${NAVY950}88`, fontSize: 13.5, fontWeight: 700, cursor: adminPass && !adminLoading ? 'pointer' : 'not-allowed', fontFamily: "'DM Sans', sans-serif", display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+              >
+                {adminLoading
+                  ? <span className="animate-spin" style={{ display: 'inline-block', width: 14, height: 14, border: `2px solid ${NAVY950}55`, borderTopColor: NAVY950, borderRadius: '50%' }} />
+                  : <><KeyRound size={14} strokeWidth={2} />Ingresar</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
