@@ -1,18 +1,17 @@
-import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home, Building2, Target, Wallet, Briefcase,
-  SlidersHorizontal, Info, ChevronDown, ChevronRight, LogOut,
+  SlidersHorizontal, Info, LogOut,
   UserCog, FlaskConical, X, UsersRound,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Logo9A }                    from '../components/Logo9A';
-import { realClients, demoClients }  from '../data/clients';
 import { useAuth }                   from '../auth/AuthContext';
 import { useDemo }                   from '../context/DemoContext';
 
 const topItems: Array<{ label: string; path: string; Icon: LucideIcon }> = [
-  { label: 'INICIO', path: '/inicio', Icon: Home },
+  { label: 'INICIO',    path: '/inicio',    Icon: Home      },
+  { label: 'EMPRESAS',  path: '/empresas',  Icon: Building2 },
 ];
 
 const sectionItems: Array<{ label: string; path: string; Icon: LucideIcon }> = [
@@ -47,19 +46,12 @@ export function Sidebar() {
   const location  = useLocation();
   const { user, signOut } = useAuth();
   const { isDemoMode, exitDemo } = useDemo();
-  const [empresasOpen, setEmpresasOpen] = useState(false);
-
-  const activeClients = isDemoMode ? demoClients : realClients;
 
   function isActive(path: string) {
     if (path === '/empresas')
       return location.pathname === '/empresas' || location.pathname.startsWith('/empresa/');
     return location.pathname === path || location.pathname.startsWith(path + '/');
   }
-
-  const activeEmpresaId = location.pathname.startsWith('/empresa/')
-    ? location.pathname.split('/')[2]
-    : null;
 
   function handleExitDemo() {
     exitDemo();
@@ -74,7 +66,7 @@ export function Sidebar() {
     <aside className="w-60 min-w-[240px] bg-navy-950 border-r border-white/8 flex flex-col shrink-0 min-h-screen">
 
       {/* Brand */}
-      <div className="flex flex-col items-center gap-3 pt-8 pb-6 border-b border-white/8">
+      <div className="flex flex-col items-center gap-3 pt-12 pb-6 border-b border-white/8">
         <Logo9A size={80} />
         <div className="text-center space-y-0.5">
           <p className="text-cream-100 text-[11px] font-semibold tracking-[0.18em]">9 ALLIANCE</p>
@@ -106,45 +98,6 @@ export function Sidebar() {
               </span>
             </button>
           ))}
-
-          {/* EMPRESAS */}
-          <div>
-            <button
-              onClick={() => { navigate('/empresas'); setEmpresasOpen(o => !o); }}
-              className={rowCls(isActive('/empresas'))}
-            >
-              <span className="flex items-center gap-3">
-                <Building2 size={16} strokeWidth={1.8} className="shrink-0" />
-                <span>EMPRESAS</span>
-              </span>
-              <span
-                className="shrink-0"
-                onClick={e => { e.stopPropagation(); setEmpresasOpen(o => !o); }}
-              >
-                {empresasOpen
-                  ? <ChevronDown size={13} strokeWidth={2} />
-                  : <ChevronRight size={13} strokeWidth={2} />}
-              </span>
-            </button>
-
-            {empresasOpen && (
-              <div className="mt-0.5 mb-1 space-y-px">
-                {activeClients.map(c => (
-                  <button
-                    key={c.id}
-                    onClick={() => navigate(`/empresa/${c.id}`)}
-                    className={`w-full text-left py-1.5 pl-12 pr-3 rounded-md transition-colors text-[10.5px] ${
-                      activeEmpresaId === c.id
-                        ? 'text-gold-400 font-medium'
-                        : 'text-cream-200/45 hover:text-cream-100'
-                    }`}
-                  >
-                    <p className="truncate leading-snug">{c.nombre}</p>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Section items */}
