@@ -8,6 +8,7 @@ import type { LucideIcon } from 'lucide-react';
 import { Logo9A } from '../components/Logo9A';
 import { realClients } from '../data/clients';
 import { useAuth } from '../auth/AuthContext';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 
 const topItems: Array<{ label: string; path: string; Icon: LucideIcon }> = [
   { label: 'INICIO', path: '/inicio', Icon: Home },
@@ -133,6 +134,12 @@ export function Sidebar() {
           ))}
         </div>
       </nav>
+
+      {/* Language switcher */}
+      <div className="border-t border-white/8 px-4 py-2.5 flex items-center justify-between">
+        <span className="text-cream-200/30 text-[9.5px] tracking-widest font-medium uppercase">Idioma</span>
+        <LanguageSwitcher />
+      </div>
 
       {/* User + logout */}
       <div className="border-t border-white/8 px-3.5 py-3 space-y-2">
