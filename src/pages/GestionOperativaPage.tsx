@@ -678,7 +678,7 @@ export default function GestionOperativaPage() {
     setAdminLoading(true);
     setAdminError('');
     await new Promise(res => setTimeout(res, 400));
-    if (adminPass === ADMIN_KEY) {
+    if (adminPass.trim().toLowerCase() === ADMIN_KEY.toLowerCase()) {
       setAdminAuthed(true);
       setRole('admin');
       setShowAdminModal(false);
