@@ -47,13 +47,13 @@ function parseAuxiliar(buf: ArrayBuffer): AuxRow[] {
   const ws = wb.Sheets[wb.SheetNames[0]];
   const raw = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: '' });
 
-  // Busca fila de encabezados: debe tener COMPROBANTE y DEBITO(S)
+  // Busca fila de encabezados: debe tener COMPROBANTE y alguna variante de DÉBITO (DEBIT/DEBE/HABER)
   let headerIdx = -1;
-  for (let i = 0; i < Math.min(15, raw.length); i++) {
+  for (let i = 0; i < Math.min(40, raw.length); i++) {
     const joined = raw[i].map((c: any) => norm(String(c))).join('|');
-    if (joined.includes('COMPROBANTE') && joined.includes('DEBIT')) {
-      headerIdx = i; break;
-    }
+    const hasComp  = joined.includes('COMPROBANTE');
+    const hasDebit = joined.includes('DEBIT') || joined.includes('|DEBE|') || joined.includes('|DEBE') || joined.includes('HABER');
+    if (hasComp && hasDebit) { headerIdx = i; break; }
   }
   if (headerIdx < 0) throw new Error('No se encontró fila de encabezados (COMPROBANTE / DEBITOS). Verifica el formato del archivo.');
 
@@ -68,8 +68,8 @@ function parseAuxiliar(buf: ArrayBuffer): AuxRow[] {
   const nombreCol  = col('SOCIAL') >= 0 ? col('SOCIAL') : col('NOMBRE');
   const cuentaCol  = col('CUENTA');
   const detalleCol = col('DETALLE');
-  const debitoCol  = col('DEBIT');
-  const creditoCol = col('CREDIT');
+  const debitoCol  = col('DEBIT') >= 0 ? col('DEBIT') : headers.findIndex(h => h === 'DEBE');
+  const creditoCol = col('CREDIT') >= 0 ? col('CREDIT') : headers.findIndex(h => h === 'HABER' || h === 'CREDITO');
 
   const rows: AuxRow[] = [];
   for (let i = headerIdx + 1; i < raw.length; i++) {
@@ -254,6 +254,16 @@ export function MigradorComprobantes() {
         let accCode = r.cuenta;
         let accId   = codeToId.get(accCode);
         const acctBlocked = (code: string) => accDetails.get(code)?.blocked ?? false;
+
+        // Siigo usa códigos de 10 dígitos con sub-auxiliar '00' al final.
+        // PUC estándar (Alegra) usa 8 dígitos — '4155500200' → '41555002' es match directo, no sustitución.
+        if (!accId && accCode.length === 10 && accCode.endsWith('00')) {
+          const std8 = accCode.slice(0, 8);
+          if (codeToId.has(std8) && !acctBlocked(std8)) {
+            accCode = std8;
+            accId   = codeToId.get(std8)!;
+          }
+        }
 
         if (!accId || acctBlocked(accCode)) {
           // Account not found or blocked → truncate to nearest active parent

@@ -4,6 +4,7 @@ import { ProtectedRoute } from './auth/ProtectedRoute';
 import { AppShell } from './layout/AppShell';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import InicioPage             from './pages/InicioPage';
 import GestionEstrategicaPage from './pages/GestionEstrategicaPage';
 import GestionComercialPage   from './pages/GestionComercialPage';
 import GestionOperativaPage   from './pages/GestionOperativaPage';
@@ -32,8 +33,9 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/gestion-estrategica" replace />} />
+            <Route index element={<Navigate to="/inicio" replace />} />
 
+            <Route path="inicio"              element={<InicioPage />} />
             <Route path="gestion-estrategica" element={<GestionEstrategicaPage />} />
             <Route path="gestion-financiera"  element={<AlegraPage />} />
             <Route path="gestion-comercial"   element={<GestionComercialPage />} />

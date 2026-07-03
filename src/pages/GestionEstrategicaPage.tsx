@@ -6,6 +6,7 @@ import { obligaciones } from '../data/obligaciones';
 import { getAllVencimientos } from '../lib/getVencimientos';
 import type { Estado } from '../lib/getVencimientos';
 import { WarningModal } from '../components/WarningModal';
+import { MarketWidget } from '../components/MarketWidget';
 
 const SESSION_KEY = 'warning_shown';
 
@@ -149,6 +150,9 @@ export default function GestionEstrategicaPage() {
             </div>
           )}
         </div>
+
+        {/* Market indicators + news */}
+        <MarketWidget />
 
         {/* Legal note */}
         <p className="text-[10px] text-cream-200/25 border-t border-white/8 pt-3">

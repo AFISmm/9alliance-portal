@@ -114,7 +114,10 @@ function parseSiigoGrupoFormat(buf: ArrayBuffer): PucRow[] {
     const c  = cuenta  && cuenta  !== '0' ? pad(cuenta)  : '';
     const sc = subCta  && subCta  !== '0' ? pad(subCta)  : '';
     const a  = aux     && aux     !== '0' ? pad(aux)     : '';
-    const sa = subAux  && subAux  !== '0' ? pad(subAux)  : '';
+    // Si hay auxiliar, SIEMPRE incluir sub-auxiliar (incluso si es 0 → '00')
+    // Siigo usa códigos de 10 dígitos: GGCCSSAASS; subAux=0 produce los dos últimos '00'
+    // Alegra soporta PUC estándar hasta 8 dígitos (GGCCSSAA); subAux=0 no agrega nivel
+    const sa = subAux && subAux !== '0' ? pad(subAux) : '';
 
     let code = g;
     if (c)  code = g + c;
@@ -232,7 +235,12 @@ export function PlanCuentasUploader() {
       const buf = await file.arrayBuffer();
       let rows: PucRow[];
 
-      if (file.name.toLowerCase().endsWith('.csv')) {
+      if (file.name.toLowerCase().endsWith('.pdf')) {
+        addLog('⚠ Formato PDF detectado.');
+        addLog('Los archivos PDF no se pueden procesar automáticamente.');
+        addLog('Por favor exporta el plan de cuentas desde Siigo/Helisa en formato Excel (.xlsx) o CSV y súbelo aquí.');
+        return;
+      } else if (file.name.toLowerCase().endsWith('.csv')) {
         const text = new TextDecoder().decode(buf);
         rows = parseCsvPUC(text);
         addLog(`Formato CSV detectado. ${rows.length} cuentas.`);
@@ -397,7 +405,11 @@ export function PlanCuentasUploader() {
               <li>Guarda los cambios y vuelve aquí a subir el archivo</li>
             </ol>
             <button
-              onClick={() => setCatalogError(false)}
+              onClick={() => {
+                setCatalogError(false);
+                // Devuelve la fase a 'parsed' para poder reintentar la carga
+                setPhase(p => (p === 'done' || p === 'uploading' || p === 'loading_alegra') ? 'parsed' : p);
+              }}
               className="text-xs text-amber-400/60 hover:text-amber-300 mt-1"
             >
               Entendido — ya lo configuré, intentar de nuevo →
@@ -512,8 +524,8 @@ export function PlanCuentasUploader() {
         >
           <span className="text-2xl group-hover:scale-110 transition">📋</span>
           <p className="text-cream-100 text-sm">{fileName || 'Arrastra el archivo aquí o haz clic'}</p>
-          <p className="text-cream-200/25 text-xs">PUC.xlsx · AUXILIAR.xlsx · puc.csv</p>
-          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
+          <p className="text-cream-200/25 text-xs">PUC.xlsx · AUXILIAR.xlsx · puc.csv · plan.pdf</p>
+          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv,.pdf" className="hidden"
             onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ''; }} />
         </div>
 

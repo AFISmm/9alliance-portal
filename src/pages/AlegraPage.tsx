@@ -9,7 +9,7 @@ import { MigradorComprobantes }  from '../components/alegra/MigradorComprobantes
 import { ImportarTerceros }      from '../components/alegra/ImportarTerceros';
 import { PlanCuentasUploader }   from '../components/alegra/PlanCuentasUploader';
 
-type Tab = 'facturas' | 'gastos' | 'productos' | 'contactos' | 'cuentas' | 'comprobantes' | 'plan-cuentas' | 'migrador' | 'terceros';
+type Tab = 'facturas' | 'gastos' | 'productos' | 'contactos' | 'cuentas' | 'comprobantes' | 'migrador' | 'terceros';
 
 function fmt(n: number) {
   return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n);
@@ -567,12 +567,13 @@ function Contactos() {
   );
 }
 
-// ─── Plan de Cuentas ─────────────────────────────────────────────────────────
+// ─── Plan de Cuentas (unificado: tabla + importar) ───────────────────────────
 function PlanCuentas() {
   const [accounts, setAccounts] = useState<AlegraAccount[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
   const [search, setSearch]     = useState('');
+  const [showImport, setShowImport] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true); setError('');
@@ -596,45 +597,82 @@ function PlanCuentas() {
     })), 'plan-cuentas-alegra.csv');
   }
 
-  if (loading) return <p className="text-cream-200/40 text-sm animate-pulse">Cargando plan de cuentas…</p>;
-  if (error)   return <ErrorBox msg={error} />;
-
   return (
     <div className="space-y-4">
+
+      {/* ── Barra de herramientas ── */}
       <div className="flex items-center gap-3 flex-wrap">
-        <input type="text" placeholder="Buscar por código o nombre…" value={search} onChange={e => setSearch(e.target.value)}
-          className="flex-1 min-w-[160px] bg-navy-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-cream-100 placeholder-cream-200/25 focus:outline-none focus:border-gold-500/50" />
-        <span className="text-cream-200/30 text-xs whitespace-nowrap">{filtered.length} cuentas</span>
+        <input
+          type="text"
+          placeholder="Buscar por código o nombre…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="flex-1 min-w-[160px] bg-navy-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-cream-100 placeholder-cream-200/25 focus:outline-none focus:border-gold-500/50"
+        />
+        {!loading && <span className="text-cream-200/30 text-xs whitespace-nowrap">{filtered.length} cuentas</span>}
+        <button
+          onClick={() => setShowImport(v => !v)}
+          className={`flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-lg border transition
+            ${showImport
+              ? 'bg-gold-500/20 border-gold-500/40 text-gold-300'
+              : 'bg-gold-500/10 hover:bg-gold-500/20 border-gold-500/25 hover:border-gold-500/40 text-gold-300'}`}
+        >
+          ↑ Importar
+        </button>
         <ExportBtn onClick={handleExport} />
-        <button onClick={load} className="text-cream-200/40 hover:text-gold-400 text-xs transition">↺</button>
+        <button onClick={load} className="text-cream-200/40 hover:text-gold-400 text-xs transition" title="Recargar">↺</button>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-white/10">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-white/10 text-cream-200/35 text-xs uppercase tracking-wider">
-              <th className="text-left px-4 py-3 w-20">Código</th>
-              <th className="text-left px-4 py-3">Nombre</th>
-              <th className="text-left px-4 py-3 hidden md:table-cell">Tipo</th>
-              <th className="text-left px-4 py-3 hidden lg:table-cell">Naturaleza</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(a => (
-              <tr key={a.id} className={`border-b border-white/5 hover:bg-white/3 transition ${(a._depth ?? 0) === 0 ? 'bg-white/2' : ''}`}>
-                <td className="px-4 py-2.5 font-mono text-gold-400/80 text-xs">{a.code ?? '—'}</td>
-                <td className="px-4 py-2.5" style={{ paddingLeft: `${(a._depth ?? 0) * 14 + 16}px` }}>
-                  {(a._depth ?? 0) === 0
-                    ? <span className="font-semibold text-cream-100">{a.name}</span>
-                    : <span className="text-cream-200/80">{a.name}</span>}
-                </td>
-                <td className="px-4 py-2.5 text-cream-200/45 text-xs hidden md:table-cell">{a.type}</td>
-                <td className="px-4 py-2.5 text-cream-200/45 text-xs hidden lg:table-cell">{a.nature ?? '—'}</td>
+
+      {/* ── Panel de importación (toggle) ── */}
+      {showImport && (
+        <div className="border border-gold-500/25 rounded-xl overflow-hidden">
+          <div className="bg-gold-500/8 px-4 py-2.5 border-b border-gold-500/15 flex items-center justify-between">
+            <p className="text-gold-300 text-xs font-semibold tracking-wide">IMPORTAR PLAN DE CUENTAS</p>
+            <button
+              onClick={() => { setShowImport(false); load(); }}
+              className="text-cream-200/35 hover:text-cream-100 text-xs transition"
+            >
+              ✕ Cerrar y actualizar
+            </button>
+          </div>
+          <div className="p-4">
+            <PlanCuentasUploader />
+          </div>
+        </div>
+      )}
+
+      {/* ── Tabla de cuentas (siempre visible) ── */}
+      {loading && <p className="text-cream-200/40 text-sm animate-pulse">Cargando plan de cuentas…</p>}
+      {error   && <ErrorBox msg={error} />}
+      {!loading && !error && (
+        <div className="overflow-x-auto rounded-xl border border-white/10">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/10 text-cream-200/35 text-xs uppercase tracking-wider">
+                <th className="text-left px-4 py-3 w-24">Código</th>
+                <th className="text-left px-4 py-3">Nombre</th>
+                <th className="text-left px-4 py-3 hidden md:table-cell w-28">Tipo</th>
+                <th className="text-left px-4 py-3 hidden lg:table-cell w-28">Naturaleza</th>
               </tr>
-            ))}
-            {filtered.length === 0 && <Empty text="Sin resultados" />}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {filtered.map(a => (
+                <tr key={a.id} className={`border-b border-white/5 hover:bg-white/3 transition ${(a._depth ?? 0) === 0 ? 'bg-white/2' : ''}`}>
+                  <td className="px-4 py-2.5 font-mono text-gold-400/80 text-xs">{a.code ?? '—'}</td>
+                  <td className="px-4 py-2.5" style={{ paddingLeft: `${(a._depth ?? 0) * 14 + 16}px` }}>
+                    {(a._depth ?? 0) === 0
+                      ? <span className="font-semibold text-cream-100">{a.name}</span>
+                      : <span className="text-cream-200/80">{a.name}</span>}
+                  </td>
+                  <td className="px-4 py-2.5 text-cream-200/45 text-xs hidden md:table-cell">{a.type}</td>
+                  <td className="px-4 py-2.5 text-cream-200/45 text-xs hidden lg:table-cell">{a.nature ?? '—'}</td>
+                </tr>
+              ))}
+              {filtered.length === 0 && <Empty text="Sin resultados" />}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -829,11 +867,10 @@ export default function AlegraPage() {
     { id: 'gastos',       label: 'Gastos'                  },
     { id: 'productos',    label: 'Productos'               },
     { id: 'contactos',    label: 'Contactos'               },
-    { id: 'cuentas',      label: 'Plan de cuentas'         },
-    { id: 'comprobantes', label: 'Comprobantes'                  },
-    { id: 'plan-cuentas', label: 'Plan de Cuentas', icon: '📋' },
-    { id: 'migrador',     label: 'Migrador',         icon: '📒' },
-    { id: 'terceros',     label: 'Terceros',          icon: '👥' },
+    { id: 'cuentas',      label: 'Plan de Cuentas'         },
+    { id: 'comprobantes', label: 'Comprobantes'            },
+    { id: 'migrador',     label: 'Migrador',  icon: '📒'  },
+    { id: 'terceros',     label: 'Terceros',  icon: '👥'  },
   ];
 
   return (
@@ -878,7 +915,6 @@ export default function AlegraPage() {
         {tab === 'contactos'    && <Contactos />}
         {tab === 'cuentas'      && <PlanCuentas />}
         {tab === 'comprobantes' && <Comprobantes accounts={accounts} />}
-        {tab === 'plan-cuentas' && <PlanCuentasUploader />}
         {tab === 'migrador'     && <MigradorComprobantes />}
         {tab === 'terceros'     && <ImportarTerceros />}
       </div>
