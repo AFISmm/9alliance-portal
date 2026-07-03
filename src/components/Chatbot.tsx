@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
-import { MessageCircle, X, Send, Bot, User, FileText, Download, CheckCircle } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, FileText, Download, CheckCircle, Star } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { useAuth } from '../auth/AuthContext';
 
@@ -21,10 +21,10 @@ interface CertForm {
 }
 
 const QUICK_ACTIONS = [
-  { label: '¿Qué puedo hacer aquí?',  text: '¿Qué funcionalidades tiene este módulo?' },
-  { label: 'Solicitar certificado',    text: 'Quiero solicitar un certificado laboral' },
-  { label: 'Ver vencimientos',         text: '¿Cómo veo los vencimientos tributarios?' },
-  { label: 'Hablar con un asesor',     text: 'Quiero hablar con un asesor de 9 Alliance' },
+  { label: '¿Qué puedo hacer aquí?', text: '¿Qué funcionalidades tiene este módulo?' },
+  { label: 'Solicitar certificado',   text: 'Quiero solicitar un certificado laboral'  },
+  { label: 'Ver vencimientos',        text: '¿Cómo veo los vencimientos tributarios?'  },
+  { label: 'Hablar con un asesor',    text: 'Quiero hablar con un asesor de 9 Alliance'},
 ];
 
 const MODULE_LABELS: Record<string, string> = {
@@ -38,107 +38,180 @@ const MODULE_LABELS: Record<string, string> = {
   '/perfil':              'Mi Perfil',
 };
 
-function downloadCertPDF(certType: string, name: string) {
+// ── Fetch logo as base64 for PDF embedding ──────────────────────────────────
+async function fetchLogoBase64(): Promise<string | null> {
+  try {
+    const res  = await fetch('/logo-9a.png');
+    const blob = await res.blob();
+    return await new Promise<string>(resolve => {
+      const reader = new FileReader();
+      reader.onload  = () => resolve(reader.result as string);
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+// ── PDF generation ───────────────────────────────────────────────────────────
+async function downloadCertPDF(certType: string, name: string) {
   const labels: Record<string, string> = {
     laboral:  'CERTIFICADO LABORAL',
     ingresos: 'CERTIFICADO DE INGRESOS Y RETENCIONES',
     activo:   'CERTIFICADO DE EMPLEADO ACTIVO',
   };
   const title = labels[certType] ?? 'CERTIFICADO';
+  const doc   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
+  // Background
   doc.setFillColor(13, 24, 41);
   doc.rect(0, 0, 210, 297, 'F');
 
   // Gold top bar
   doc.setFillColor(201, 168, 76);
-  doc.rect(0, 0, 210, 6, 'F');
+  doc.rect(0, 0, 210, 5, 'F');
 
-  doc.setFontSize(24);
+  // Logo
+  const logoData = await fetchLogoBase64();
+  if (logoData) {
+    try { doc.addImage(logoData, 'PNG', 90, 10, 30, 30); } catch { /* skip */ }
+  }
+
+  // Company name
+  doc.setFontSize(20);
   doc.setTextColor(201, 168, 76);
   doc.setFont('helvetica', 'bold');
-  doc.text('9 Alliance', 105, 34, { align: 'center' });
+  doc.text('9 Alliance', 105, 48, { align: 'center' });
 
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setTextColor(124, 138, 156);
   doc.setFont('helvetica', 'normal');
-  doc.text('Portal Administrativo · Documento oficial', 105, 42, { align: 'center' });
+  doc.text('Portal Administrativo · Documento oficial', 105, 55, { align: 'center' });
 
+  // Divider
   doc.setDrawColor(36, 53, 96);
   doc.setLineWidth(0.4);
-  doc.line(20, 50, 190, 50);
+  doc.line(20, 61, 190, 61);
 
-  doc.setFontSize(15);
+  // Certificate title
+  doc.setFontSize(14);
   doc.setTextColor(248, 247, 244);
   doc.setFont('helvetica', 'bold');
-  doc.text(title, 105, 63, { align: 'center' });
+  doc.text(title, 105, 72, { align: 'center' });
 
+  // Date
   doc.setFontSize(10);
   doc.setTextColor(174, 188, 205);
   doc.setFont('helvetica', 'normal');
   const today = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
-  doc.text(`Bogotá D.C., ${today}`, 105, 73, { align: 'center' });
+  doc.text(`Bogotá D.C., ${today}`, 105, 81, { align: 'center' });
 
-  doc.line(20, 80, 190, 80);
+  doc.line(20, 88, 190, 88);
 
-  doc.setFontSize(11);
-  doc.setTextColor(248, 247, 244);
-  const body = [
-    '9 Alliance SAS BIC, identificada con NIT 900.524.213-6, hace constar que:',
-    '',
-    name,
-    '',
-    'se encuentra vinculado(a) a esta organización, en los términos del contrato',
-    'laboral vigente suscrito entre las partes.',
-    '',
-    'Este certificado se expide a solicitud del interesado(a) para los fines',
-    'legales y personales que estime conveniente.',
+  // Body
+  const bodyLines = [
+    { text: '9 Alliance SAS BIC, identificada con NIT 900.524.213-6, certifica que:', bold: false, color: [248, 247, 244] as [number,number,number] },
+    { text: '', bold: false, color: [248, 247, 244] as [number,number,number] },
+    { text: name, bold: true, color: [201, 168, 76] as [number,number,number] },
+    { text: '', bold: false, color: [248, 247, 244] as [number,number,number] },
+    { text: 'se encuentra vinculado(a) a esta organización en calidad de colaborador(a),', bold: false, color: [248, 247, 244] as [number,number,number] },
+    { text: 'en los términos del contrato laboral vigente suscrito entre las partes.', bold: false, color: [248, 247, 244] as [number,number,number] },
+    { text: '', bold: false, color: [248, 247, 244] as [number,number,number] },
+    { text: 'Este certificado se expide a solicitud del interesado(a) para los fines', bold: false, color: [248, 247, 244] as [number,number,number] },
+    { text: 'legales y personales que estime conveniente.', bold: false, color: [248, 247, 244] as [number,number,number] },
   ];
-  let y = 96;
-  for (const line of body) {
-    if (line === name) {
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(201, 168, 76);
-    } else {
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(248, 247, 244);
-    }
-    doc.text(line, 22, y);
-    y += 7;
+
+  let y = 100;
+  for (const line of bodyLines) {
+    doc.setFont('helvetica', line.bold ? 'bold' : 'normal');
+    doc.setFontSize(line.bold ? 12 : 11);
+    doc.setTextColor(...line.color);
+    if (line.text) doc.text(line.text, 22, y);
+    y += line.bold ? 9 : 7;
   }
 
-  // Signature area
+  // Signature line
   doc.setDrawColor(36, 53, 96);
-  doc.line(20, 200, 95, 200);
+  doc.line(22, 200, 95, 200);
   doc.setFontSize(9);
   doc.setTextColor(124, 138, 156);
   doc.setFont('helvetica', 'normal');
   doc.text('Firma autorizada', 22, 207);
   doc.text('9 Alliance SAS BIC', 22, 213);
 
+  // Footer divider
   doc.line(20, 248, 190, 248);
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.text('Documento generado electrónicamente · 9 Alliance SAS BIC · mm@9alliance.co', 105, 255, { align: 'center' });
 
   // Gold bottom bar
   doc.setFillColor(201, 168, 76);
-  doc.rect(0, 291, 210, 6, 'F');
+  doc.rect(0, 292, 210, 5, 'F');
 
   const filename = `${title.replace(/\s+/g, '_')}_${name.replace(/\s+/g, '_')}.pdf`;
   doc.save(filename);
 }
 
+// ── Satisfaction survey ───────────────────────────────────────────────────────
+function SatisfactionSurvey() {
+  const [rating,    setRating]    = useState(0);
+  const [hover,     setHover]     = useState(0);
+  const [submitted, setSubmitted] = useState(false);
+
+  if (submitted) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 10, background: 'rgba(52,211,153,.1)', border: '1px solid rgba(52,211,153,.3)' }}>
+        <CheckCircle size={14} strokeWidth={2} style={{ color: '#34D399' }} />
+        <span style={{ fontSize: 12.5, color: '#6EE7B7' }}>¡Gracias por tu calificación!</span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: '#162038', border: `1px solid ${NAVY800}`, borderRadius: 12, padding: '14px' }}>
+      <p style={{ margin: '0 0 10px', fontSize: 13, color: '#F8F7F4', fontWeight: 600 }}>
+        ¿Quedaste satisfecho con la atención?
+      </p>
+      <p style={{ margin: '0 0 12px', fontSize: 12, color: '#7C8A9C' }}>
+        Califica la resolución de tu solicitud
+      </p>
+      <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+        {[1, 2, 3, 4, 5].map(star => (
+          <button
+            key={star}
+            onClick={() => { setRating(star); setTimeout(() => setSubmitted(true), 300); }}
+            onMouseEnter={() => setHover(star)}
+            onMouseLeave={() => setHover(0)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', transition: 'transform .1s', transform: hover >= star || rating >= star ? 'scale(1.2)' : 'scale(1)' }}
+          >
+            <Star
+              size={24}
+              strokeWidth={1.5}
+              style={{
+                color: hover >= star || rating >= star ? GOLD : '#243560',
+                fill:  hover >= star || rating >= star ? GOLD : 'transparent',
+                transition: 'color .15s, fill .15s',
+              }}
+            />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 export default function Chatbot() {
   const { user } = useAuth();
   const location = useLocation();
-  const [open, setOpen]         = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput]       = useState('');
-  const [loading, setLoading]   = useState(false);
-  const [showCertForm, setShowCertForm] = useState(false);
-  const [certForm, setCertForm] = useState<CertForm>({ type: 'laboral', name: '' });
-  const [certDone, setCertDone] = useState(false);
+  const [open,          setOpen]         = useState(false);
+  const [messages,      setMessages]     = useState<Message[]>([]);
+  const [input,         setInput]        = useState('');
+  const [loading,       setLoading]      = useState(false);
+  const [showCertForm,  setShowCertForm] = useState(false);
+  const [certForm,      setCertForm]     = useState<CertForm>({ type: 'laboral', name: '' });
+  const [showSurvey,    setShowSurvey]   = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   const currentModule = Object.entries(MODULE_LABELS).find(
@@ -147,7 +220,11 @@ export default function Chatbot() {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading, showCertForm]);
+  }, [messages, loading, showCertForm, showSurvey]);
+
+  const displayName = (user?.user_metadata?.display_name as string | undefined)
+    ?? user?.email?.split('@')[0]
+    ?? '';
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
@@ -157,10 +234,21 @@ export default function Chatbot() {
     const newMessages: Message[] = [...messages, { role: 'user', content: trimmed }];
     setMessages(newMessages);
     setInput('');
-    setLoading(true);
 
+    // Certificate request → skip API, show form directly
+    if (isCertIntent) {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Con gusto te ayudo. Completa el siguiente formulario para generar tu certificado:',
+      }]);
+      setShowCertForm(true);
+      setShowSurvey(false);
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await fetch('/api/chat', {
+      const res  = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -169,38 +257,44 @@ export default function Chatbot() {
         }),
       });
       const data = await res.json();
-      const reply = data.content ?? 'Lo siento, no pude procesar tu solicitud.';
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
-      if (isCertIntent) setTimeout(() => { setShowCertForm(true); setCertDone(false); }, 350);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: data.content ?? 'No pude obtener una respuesta en este momento. Intenta de nuevo.',
+      }]);
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Error de conexión. Verifica tu internet e intenta de nuevo.' }]);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Error de conexión. Verifica tu internet e intenta de nuevo.',
+      }]);
     } finally {
       setLoading(false);
     }
   }
 
-  function handleDownloadCert(e: React.FormEvent) {
+  async function handleDownloadCert(e: React.FormEvent) {
     e.preventDefault();
     if (!certForm.name.trim()) return;
-    downloadCertPDF(certForm.type, certForm.name.trim());
-    setCertDone(true);
+    await downloadCertPDF(certForm.type, certForm.name.trim());
     setShowCertForm(false);
+    setShowSurvey(true);
     setMessages(prev => [...prev, {
       role: 'assistant',
-      content: `✅ El certificado de **${certForm.name}** se ha descargado en tu dispositivo.`,
+      content: `✅ El certificado de **${certForm.name}** se ha descargado correctamente.`,
     }]);
+    setCertForm(p => ({ ...p, name: '' }));
   }
 
   function openChat() {
     setOpen(true);
     if (messages.length === 0) {
-      const displayName = (user?.user_metadata?.display_name as string | undefined) || user?.email?.split('@')[0];
       setMessages([{
         role: 'assistant',
-        content: `¡Hola${displayName ? ', ' + displayName : ''}! Soy el asistente de **9 Alliance**. ¿En qué puedo ayudarte${currentModule ? ` con **${currentModule}**` : ''}?`,
+        content: `¡Hola${displayName ? ', ' + displayName : ''}! Soy Julia, asistente de 9 Alliance. ¿En qué puedo ayudarte hoy?`,
       }]);
     }
   }
+
+  const hasUserMessages = messages.some(m => m.role === 'user');
 
   return createPortal(
     <>
@@ -208,13 +302,13 @@ export default function Chatbot() {
       {!open && (
         <button
           onClick={openChat}
-          title="Asistente 9 Alliance"
+          title="Julia · Asistente 9 Alliance"
           style={{
-            position: 'fixed', bottom: 28, right: 28, zIndex: 900,
+            position: 'fixed', bottom: 28, right: 28, zIndex: 9999,
             width: 54, height: 54, borderRadius: '50%',
             background: `linear-gradient(135deg,#d4b96a,${GOLD})`,
             border: 'none', cursor: 'pointer',
-            boxShadow: '0 4px 20px rgba(201,168,76,.45)',
+            boxShadow: '0 4px 20px rgba(201,168,76,.5)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >
@@ -225,21 +319,22 @@ export default function Chatbot() {
       {/* Chat panel */}
       {open && (
         <div style={{
-          position: 'fixed', bottom: 24, right: 24, zIndex: 900,
-          width: 370, height: 560,
+          position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
+          width: 370, height: 570,
           background: NAVY900, border: `1px solid ${NAVY800}`,
-          borderRadius: 18, boxShadow: '0 20px 60px rgba(0,0,0,.6)',
+          borderRadius: 18, boxShadow: '0 20px 60px rgba(0,0,0,.65)',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
           fontFamily: "'DM Sans', system-ui, sans-serif",
         }}>
+
           {/* Header */}
           <div style={{ background: `linear-gradient(135deg,${NAVY950},${NAVY900})`, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: `1px solid ${NAVY800}` }}>
-            <div style={{ width: 34, height: 34, borderRadius: '50%', background: `linear-gradient(135deg,#d4b96a,${GOLD})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Bot size={17} strokeWidth={1.75} style={{ color: NAVY950 }} />
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg,#d4b96a,${GOLD})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Bot size={18} strokeWidth={1.75} style={{ color: NAVY950 }} />
             </div>
             <div style={{ flex: 1 }}>
-              <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: '#F8F7F4' }}>Asistente 9 Alliance</p>
-              <p style={{ margin: 0, fontSize: 11, color: GOLD }}>● En línea</p>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#F8F7F4', fontFamily: 'Inter, sans-serif' }}>Julia</p>
+              <p style={{ margin: 0, fontSize: 11, color: GOLD }}>● Asistente 9 Alliance</p>
             </div>
             <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#7C8A9C', padding: 4, display: 'flex' }}>
               <X size={17} strokeWidth={2} />
@@ -250,13 +345,16 @@ export default function Chatbot() {
           <div style={{ flex: 1, overflowY: 'auto', padding: '14px 14px 8px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {messages.map((m, i) => (
               <div key={i} style={{ display: 'flex', gap: 8, flexDirection: m.role === 'user' ? 'row-reverse' : 'row', alignItems: 'flex-end' }}>
-                <div style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: m.role === 'user' ? `linear-gradient(135deg,#d4b96a,${GOLD})` : NAVY800 }}>
-                  {m.role === 'user'
-                    ? <User size={13} strokeWidth={1.75} style={{ color: NAVY950 }} />
-                    : <Bot  size={13} strokeWidth={1.75} style={{ color: GOLD }} />}
+                <div style={{
+                  width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: m.role === 'user' ? `linear-gradient(135deg,#d4b96a,${GOLD})` : NAVY800,
+                  fontSize: 10, fontWeight: 700, color: m.role === 'user' ? NAVY950 : GOLD,
+                }}>
+                  {m.role === 'user' ? (displayName ? displayName[0].toUpperCase() : 'U') : 'J'}
                 </div>
                 <div style={{
-                  maxWidth: '75%', padding: '9px 12px',
+                  maxWidth: '76%', padding: '9px 12px',
                   borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
                   background: m.role === 'user' ? `linear-gradient(135deg,#2d4175,${NAVY800})` : '#1e3050',
                   border: `1px solid ${m.role === 'user' ? NAVY800 : 'rgba(255,255,255,.07)'}`,
@@ -271,9 +369,7 @@ export default function Chatbot() {
             {/* Typing indicator */}
             {loading && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-                <div style={{ width: 26, height: 26, borderRadius: '50%', background: NAVY800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Bot size={13} strokeWidth={1.75} style={{ color: GOLD }} />
-                </div>
+                <div style={{ width: 26, height: 26, borderRadius: '50%', background: NAVY800, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: GOLD }}>J</div>
                 <div style={{ padding: '10px 14px', borderRadius: '14px 14px 14px 4px', background: '#1e3050', border: '1px solid rgba(255,255,255,.07)', display: 'flex', gap: 5, alignItems: 'center' }}>
                   {[0, 1, 2].map(i => (
                     <span key={i} className="animate-bounce" style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: GOLD, animationDelay: `${i * 0.15}s` }} />
@@ -283,8 +379,8 @@ export default function Chatbot() {
             )}
 
             {/* Certificate form */}
-            {showCertForm && !loading && (
-              <div style={{ background: '#162038', border: `1px solid ${NAVY800}`, borderRadius: 12, padding: '14px', marginTop: 4 }}>
+            {showCertForm && (
+              <div style={{ background: '#162038', border: `1px solid ${NAVY800}`, borderRadius: 12, padding: '14px', marginTop: 2 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <FileText size={15} strokeWidth={1.75} style={{ color: GOLD }} />
                   <span style={{ fontSize: 13, fontWeight: 600, color: '#F8F7F4' }}>Generar certificado</span>
@@ -327,18 +423,14 @@ export default function Chatbot() {
               </div>
             )}
 
-            {certDone && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 12px', borderRadius: 10, background: 'rgba(52,211,153,.1)', border: '1px solid rgba(52,211,153,.3)' }}>
-                <CheckCircle size={14} strokeWidth={2} style={{ color: '#34D399' }} />
-                <span style={{ fontSize: 12.5, color: '#6EE7B7' }}>Certificado descargado</span>
-              </div>
-            )}
+            {/* Satisfaction survey */}
+            {showSurvey && <SatisfactionSurvey />}
 
             <div ref={endRef} />
           </div>
 
-          {/* Quick actions (only before first user message) */}
-          {messages.filter(m => m.role === 'user').length === 0 && (
+          {/* Quick actions — always visible when no user messages yet */}
+          {!hasUserMessages && (
             <div style={{ padding: '0 14px 10px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {QUICK_ACTIONS.map(a => (
                 <button
@@ -370,6 +462,7 @@ export default function Chatbot() {
               <Send size={15} strokeWidth={2} style={{ color: input.trim() ? NAVY950 : `${NAVY950}88` }} />
             </button>
           </div>
+
         </div>
       )}
     </>,
