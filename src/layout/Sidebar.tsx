@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home, Building2, Target, Wallet, Briefcase,
-  SlidersHorizontal, Info, ChevronDown, ChevronRight,
+  SlidersHorizontal, Info, ChevronDown, ChevronRight, LogOut,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Logo9A } from '../components/Logo9A';
 import { realClients } from '../data/clients';
+import { useAuth } from '../auth/AuthContext';
 
 const topItems: Array<{ label: string; path: string; Icon: LucideIcon }> = [
   { label: 'INICIO', path: '/inicio', Icon: Home },
@@ -30,9 +31,18 @@ function rowCls(active: boolean) {
   );
 }
 
+function getInitials(email: string): string {
+  const user = email.split('@')[0];
+  const parts = user.split(/[._-]/);
+  return parts.length >= 2
+    ? (parts[0][0] + parts[1][0]).toUpperCase()
+    : user.slice(0, 2).toUpperCase();
+}
+
 export function Sidebar() {
   const navigate  = useNavigate();
   const location  = useLocation();
+  const { user, signOut } = useAuth();
   const [empresasOpen, setEmpresasOpen] = useState(false);
 
   function isActive(path: string) {
@@ -124,9 +134,31 @@ export function Sidebar() {
         </div>
       </nav>
 
-      {/* Footer */}
-      <div className="border-t border-white/8 px-4 py-3">
-        <p className="text-cream-200/20 text-[9px] tracking-widest text-center font-medium">v 2.0 · 2026</p>
+      {/* User + logout */}
+      <div className="border-t border-white/8 px-3.5 py-3 space-y-2">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[11px] font-bold"
+            style={{ background: 'linear-gradient(135deg,#d4b96a,#C9A84C)', color: '#0d1829' }}
+          >
+            {user?.email ? getInitials(user.email) : 'U'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-cream-100 text-[12px] font-semibold truncate leading-tight">
+              {user?.email?.split('@')[0] ?? 'Usuario'}
+            </p>
+            <p className="text-cream-200/35 text-[10px] truncate leading-tight">
+              {user?.email ?? ''}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={signOut}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-cream-200/50 hover:text-red-400 hover:bg-red-400/8 transition-colors text-[11.5px] font-medium"
+        >
+          <LogOut size={13} strokeWidth={1.9} className="shrink-0" />
+          Cerrar sesión
+        </button>
       </div>
     </aside>
   );
