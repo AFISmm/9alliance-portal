@@ -63,7 +63,7 @@ export function Sidebar() {
   const initials    = email ? getInitials(email) : (isDemoMode ? 'DM' : 'U');
 
   return (
-    <aside className="w-60 min-w-[240px] bg-navy-950 border-r border-white/8 flex flex-col shrink-0 min-h-screen">
+    <aside className="w-60 min-w-[240px] bg-navy-950 border-r border-white/8 flex flex-col shrink-0 h-screen sticky top-0 overflow-y-auto">
 
       {/* Brand */}
       <div className="flex flex-col items-center gap-3 pt-12 pb-6 border-b border-white/8">

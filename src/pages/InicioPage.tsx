@@ -215,7 +215,7 @@ export default function InicioPage() {
   const isLive    = (mkt?.news.flatMap(f => f.items).length ?? 0) >= 4;
 
   return (
-    <div className="flex flex-col gap-4 max-w-4xl">
+    <div className="flex flex-col gap-4">
 
       {/* ── Header ── */}
       <div className="flex items-end justify-between">
