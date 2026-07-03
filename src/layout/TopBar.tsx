@@ -13,6 +13,7 @@ const MODULE_NAMES: Record<string, string> = {
   '/empresas':            'Empresas',
   '/empresa':             'Detalle de empresa',
   '/perfil':              'Mi perfil',
+  '/gestion-usuarios':   'Gestión de Usuarios',
 };
 
 export function TopBar() {

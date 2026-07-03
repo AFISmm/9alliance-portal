@@ -199,6 +199,50 @@ export default function InicioPage() {
       {/* ── Franja superior: 3 widgets horizontales ──────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
+        {/* Próximos vencimientos */}
+        <div className="bg-navy-800/50 border border-white/8 rounded-xl overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-white/8 flex items-center justify-between">
+            <h3 className="text-cream-100 text-xs font-semibold">Próximos vencimientos</h3>
+            <button
+              onClick={() => navigate('/informacion-general?tab=calendario')}
+              className="text-gold-400/50 hover:text-gold-400 text-[10px] transition-colors"
+            >
+              Ver todos →
+            </button>
+          </div>
+          {proximos.length === 0 ? (
+            <p className="px-4 py-5 text-center text-cream-200/30 text-xs">Sin vencimientos próximos</p>
+          ) : (
+            <div className="divide-y divide-white/5">
+              {proximos.map(v => {
+                const cliente = clientsMap[v.clienteId];
+                const oblig   = obligaciones.find(o => o.id === v.obligacionId);
+                const isVenc  = v.estado === 'vencido';
+                const fecha   = v.fechaExactaLabel ?? v.rangoFechas;
+                return (
+                  <button
+                    key={v.id}
+                    onClick={() => navigate(`/empresa/${v.clienteId}`)}
+                    className="w-full flex items-start justify-between gap-2 px-4 py-2.5 hover:bg-white/3 transition-colors text-left"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-cream-100 text-[11px] font-semibold truncate">
+                        {cliente?.nombre ?? v.clienteId}
+                      </p>
+                      <p className="text-cream-200/40 text-[10px] truncate mt-0.5">
+                        {oblig?.nombre ?? v.obligacionId}
+                      </p>
+                    </div>
+                    <p className={`text-[10.5px] font-semibold tabular-nums shrink-0 mt-0.5 ${isVenc ? 'text-red-400' : 'text-amber-400'}`}>
+                      {shortDate(fecha)}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         {/* Mercados */}
         <div className="bg-navy-800/50 border border-white/8 rounded-xl overflow-hidden">
           <div className="px-4 py-2.5 border-b border-white/8 flex items-center gap-2">
@@ -250,50 +294,6 @@ export default function InicioPage() {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Próximos vencimientos */}
-        <div className="bg-navy-800/50 border border-white/8 rounded-xl overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-white/8 flex items-center justify-between">
-            <h3 className="text-cream-100 text-xs font-semibold">Próximos vencimientos</h3>
-            <button
-              onClick={() => navigate('/informacion-general?tab=calendario')}
-              className="text-gold-400/50 hover:text-gold-400 text-[10px] transition-colors"
-            >
-              Ver todos →
-            </button>
-          </div>
-          {proximos.length === 0 ? (
-            <p className="px-4 py-5 text-center text-cream-200/30 text-xs">Sin vencimientos próximos</p>
-          ) : (
-            <div className="divide-y divide-white/5">
-              {proximos.map(v => {
-                const cliente = clientsMap[v.clienteId];
-                const oblig   = obligaciones.find(o => o.id === v.obligacionId);
-                const isVenc  = v.estado === 'vencido';
-                const fecha   = v.fechaExactaLabel ?? v.rangoFechas;
-                return (
-                  <button
-                    key={v.id}
-                    onClick={() => navigate(`/empresa/${v.clienteId}`)}
-                    className="w-full flex items-start justify-between gap-2 px-4 py-2.5 hover:bg-white/3 transition-colors text-left"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-cream-100 text-[11px] font-semibold truncate">
-                        {cliente?.nombre ?? v.clienteId}
-                      </p>
-                      <p className="text-cream-200/40 text-[10px] truncate mt-0.5">
-                        {oblig?.nombre ?? v.obligacionId}
-                      </p>
-                    </div>
-                    <p className={`text-[10.5px] font-semibold tabular-nums shrink-0 mt-0.5 ${isVenc ? 'text-red-400' : 'text-amber-400'}`}>
-                      {shortDate(fecha)}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
 
       </div>

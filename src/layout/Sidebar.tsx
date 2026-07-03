@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home, Building2, Target, Wallet, Briefcase,
   SlidersHorizontal, Info, ChevronDown, ChevronRight, LogOut,
-  UserCog, FlaskConical, X,
+  UserCog, FlaskConical, X, UsersRound,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Logo9A }                    from '../components/Logo9A';
@@ -21,6 +21,7 @@ const sectionItems: Array<{ label: string; path: string; Icon: LucideIcon }> = [
   { label: 'GESTIÓN COMERCIAL',   path: '/gestion-comercial',   Icon: Briefcase },
   { label: 'GESTIÓN OPERATIVA',   path: '/gestion-operativa',   Icon: SlidersHorizontal },
   { label: 'INFORMACIÓN GENERAL', path: '/informacion-general', Icon: Info },
+  { label: 'GESTIÓN DE USUARIOS', path: '/gestion-usuarios',    Icon: UsersRound },
 ];
 
 function rowCls(active: boolean) {
@@ -73,8 +74,8 @@ export function Sidebar() {
     <aside className="w-60 min-w-[240px] bg-navy-950 border-r border-white/8 flex flex-col shrink-0 min-h-screen">
 
       {/* Brand */}
-      <div className="flex flex-col items-center gap-2.5 pt-6 pb-5 border-b border-white/8">
-        <Logo9A size={56} />
+      <div className="flex flex-col items-center gap-3 pt-8 pb-6 border-b border-white/8">
+        <Logo9A size={80} />
         <div className="text-center space-y-0.5">
           <p className="text-cream-100 text-[11px] font-semibold tracking-[0.18em]">9 ALLIANCE</p>
           <p className="text-cream-200/30 text-[9px] tracking-[0.12em] uppercase">Portal Administrativo</p>
