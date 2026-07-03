@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { AuthProvider }    from './auth/AuthContext';
 import { DemoProvider }    from './context/DemoContext';
+import { LayoutProvider }  from './context/LayoutContext';
 import { ProtectedRoute }  from './auth/ProtectedRoute';
 import { AppShell }        from './layout/AppShell';
 import Login               from './pages/Login';
@@ -22,6 +23,7 @@ function RedirectClienteToEmpresa() {
 
 export default function App() {
   return (
+    <LayoutProvider>
     <DemoProvider>
       <AuthProvider>
         <BrowserRouter>
@@ -63,5 +65,6 @@ export default function App() {
         </BrowserRouter>
       </AuthProvider>
     </DemoProvider>
+    </LayoutProvider>
   );
 }

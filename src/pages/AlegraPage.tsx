@@ -1,5 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
+  FileText, Receipt, Package, Users, BookOpen,
+  FileStack, ArrowRightLeft, UserCheck,
+} from 'lucide-react';
+import { useLayout } from '../context/LayoutContext';
+import {
   getAccounts, getJournals, getInvoices, getExpenses, getItems, getContacts,
   createJournal, createContact, createItem, exportToCSV, parseCSV,
   type AlegraAccount, type AlegraJournal, type AlegraInvoice,
@@ -854,6 +859,7 @@ export default function AlegraPage() {
   const [accounts, setAccounts] = useState<AlegraAccount[]>([]);
   const [connStatus, setConnStatus] = useState<'checking' | 'ok' | 'error'>('checking');
   const [connMsg, setConnMsg]   = useState('');
+  const { sidebarCollapsed, setSidebarCollapsed } = useLayout();
 
   useEffect(() => {
     getContacts()
@@ -862,53 +868,105 @@ export default function AlegraPage() {
     getAccounts().then(setAccounts).catch(() => {});
   }, []);
 
-  const tabs: { id: Tab; label: string; icon?: string }[] = [
-    { id: 'facturas',     label: 'Facturas'                },
-    { id: 'gastos',       label: 'Gastos'                  },
-    { id: 'productos',    label: 'Productos'               },
-    { id: 'contactos',    label: 'Contactos'               },
-    { id: 'cuentas',      label: 'Plan de Cuentas'         },
-    { id: 'comprobantes', label: 'Comprobantes'            },
-    { id: 'migrador',     label: 'Migrador',  icon: '📒'  },
-    { id: 'terceros',     label: 'Terceros',  icon: '👥'  },
+  const tabs: { id: Tab; label: string; Icon: React.ElementType }[] = [
+    { id: 'facturas',     label: 'Facturas',       Icon: FileText        },
+    { id: 'gastos',       label: 'Gastos',         Icon: Receipt         },
+    { id: 'productos',    label: 'Productos',      Icon: Package         },
+    { id: 'contactos',    label: 'Contactos',      Icon: Users           },
+    { id: 'cuentas',      label: 'Plan de Cuentas',Icon: BookOpen        },
+    { id: 'comprobantes', label: 'Comprobantes',   Icon: FileStack       },
+    { id: 'migrador',     label: 'Migrador',       Icon: ArrowRightLeft  },
+    { id: 'terceros',     label: 'Terceros',       Icon: UserCheck       },
   ];
 
+  function handleTabClick(id: Tab) {
+    setTab(id);
+    setSidebarCollapsed(true);
+  }
+
+  const connColor = connStatus === 'ok' ? '#34D399' : connStatus === 'error' ? '#F87171' : '#7C8A9C';
+  const connLabel = connStatus === 'checking' ? 'Verificando…'
+    : connStatus === 'ok' ? 'Conectado'
+    : `Error — ${connMsg}`;
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-cream-100">Alegra</h1>
-          <p className="text-cream-200/40 text-sm mt-1">Facturas, gastos, contactos y contabilidad</p>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 0, minHeight: 'calc(100vh - 44px - 96px)' }}>
+
+      {/* ── Sub-sidebar vertical ── */}
+      <div style={{
+        width: 200,
+        flexShrink: 0,
+        background: '#1B2A4A',
+        border: '1px solid #243560',
+        borderRadius: 12,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'sticky',
+        top: 0,
+        alignSelf: 'flex-start',
+      }}>
+        {/* Header */}
+        <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid #243560' }}>
+          <h1 style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#F8F7F4', letterSpacing: '0.14em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif' }}>
+            Gestión Financiera
+          </h1>
+          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: connColor, flexShrink: 0, animation: connStatus === 'checking' ? 'pulse 1.5s infinite' : undefined }} />
+            <span style={{ fontSize: 10.5, color: connColor, fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{connLabel}</span>
+          </div>
         </div>
-        <div className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border transition ${
-          connStatus === 'ok'      ? 'bg-green-500/10 border-green-500/25 text-green-300'
-          : connStatus === 'error' ? 'bg-red-500/10 border-red-500/25 text-red-400'
-          : 'bg-white/5 border-white/10 text-cream-200/40'
-        }`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${
-            connStatus === 'ok' ? 'bg-green-400'
-            : connStatus === 'error' ? 'bg-red-400 animate-pulse'
-            : 'bg-cream-200/30 animate-pulse'
-          }`} />
-          {connStatus === 'checking' ? 'Verificando…'
-           : connStatus === 'ok'     ? 'Conectado a Alegra'
-           : `Error — ${connMsg}`}
-        </div>
+
+        {/* Nav items */}
+        <nav style={{ flex: 1, padding: '8px 6px' }}>
+          {tabs.map(({ id, label, Icon }) => {
+            const active = tab === id;
+            return (
+              <button
+                key={id}
+                onClick={() => handleTabClick(id)}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 9,
+                  padding: '8px 10px',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: active ? 'rgba(201,168,76,.12)' : 'transparent',
+                  color: active ? '#C9A84C' : 'rgba(174,188,205,.55)',
+                  fontSize: 12.5,
+                  fontWeight: active ? 600 : 500,
+                  fontFamily: "'DM Sans', sans-serif",
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'background 0.15s, color 0.15s',
+                  outline: 'none',
+                  marginBottom: 1,
+                  boxShadow: active ? 'inset 0 0 0 1px rgba(201,168,76,.2)' : 'none',
+                }}
+                onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,.05)'; (e.currentTarget as HTMLButtonElement).style.color = '#F8F7F4'; } }}
+                onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(174,188,205,.55)'; } }}
+              >
+                <Icon size={14} strokeWidth={active ? 2 : 1.75} style={{ flexShrink: 0 }} />
+                {label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Sidebar toggle hint */}
+        {!sidebarCollapsed && (
+          <div style={{ padding: '8px 6px 10px', borderTop: '1px solid #243560' }}>
+            <p style={{ margin: 0, fontSize: 10, color: 'rgba(174,188,205,.3)', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>
+              Selecciona un módulo para maximizar
+            </p>
+          </div>
+        )}
       </div>
 
-      <div className="flex gap-1 flex-wrap bg-navy-900/60 rounded-xl p-1 w-fit">
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5 ${
-              tab === t.id ? 'bg-gold-500/15 text-gold-300 border border-gold-500/25' : 'text-cream-200/50 hover:text-cream-100'
-            }`}>
-            {t.icon && <span className="text-base leading-none">{t.icon}</span>}
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      <div>
+      {/* ── Contenido del módulo ── */}
+      <div style={{ flex: 1, minWidth: 0, paddingLeft: 24 }}>
         {tab === 'facturas'     && <Facturas />}
         {tab === 'gastos'       && <Gastos />}
         {tab === 'productos'    && <Productos />}
@@ -918,6 +976,7 @@ export default function AlegraPage() {
         {tab === 'migrador'     && <MigradorComprobantes />}
         {tab === 'terceros'     && <ImportarTerceros />}
       </div>
+
     </div>
   );
 }
