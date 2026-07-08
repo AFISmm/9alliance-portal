@@ -14,7 +14,7 @@ function getBaseUrl() {
 }
 
 export default async function handler(req: any, res: any) {
-  const base = getBaseUrl();
+  const base    = getBaseUrl();
   const headers = getSupabaseHeaders();
 
   if (!base || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -29,6 +29,45 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json({ users: data.users ?? [] });
   }
 
+  // POST — create user OR reset password
+  if (req.method === 'POST') {
+    const body = req.body ?? {};
+
+    // Reset password: generate recovery link
+    if (req.query.action === 'reset') {
+      const { email } = body;
+      if (!email) return res.status(400).json({ error: 'email requerido' });
+      const r = await fetch(`${base}/auth/v1/admin/generate_link`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ type: 'recovery', email }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) return res.status(r.status).json({ error: data.message ?? data.error_description ?? 'Error generando enlace' });
+      return res.status(200).json({ link: data.action_link ?? null, sent: true });
+    }
+
+    // Create new user
+    const { email, password, first_name, second_name, first_last_name, second_last_name, identification, phone } = body;
+    if (!email || !password || !first_name || !first_last_name || !second_last_name || !identification) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios (nombre, apellidos, identificación, correo, contraseña)' });
+    }
+    const display_name = [first_name, second_name, first_last_name, second_last_name].filter(Boolean).join(' ');
+    const r = await fetch(`${base}/auth/v1/admin/users`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { display_name, first_name, second_name, first_last_name, second_last_name, identification, phone },
+      }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) return res.status(r.status).json({ error: data.message ?? data.error_description ?? 'Error creando usuario' });
+    return res.status(201).json({ ok: true, user: data });
+  }
+
   // DELETE — remove user
   if (req.method === 'DELETE') {
     const { id } = req.query;
@@ -39,19 +78,25 @@ export default async function handler(req: any, res: any) {
     return res.status(r.status).json({ error: data.message ?? 'Error eliminando usuario' });
   }
 
-  // PATCH — update user (display_name, email, password)
+  // PATCH — update user
   if (req.method === 'PATCH') {
     const { id } = req.query;
     if (!id) return res.status(400).json({ error: 'id requerido' });
-    const { display_name, email, password } = req.body ?? {};
-    const body: Record<string, unknown> = {};
-    if (email) body.email = email;
-    if (password) body.password = password;
-    if (display_name !== undefined) body.user_metadata = { display_name };
+    const { display_name, email, password, first_name, second_name, first_last_name, second_last_name, identification, phone } = req.body ?? {};
+    const patchBody: Record<string, unknown> = {};
+    if (email) patchBody.email = email;
+    if (password) patchBody.password = password;
+    const meta: Record<string, string> = {};
+    if (display_name !== undefined) meta.display_name = display_name;
+    if (first_name !== undefined) meta.first_name = first_name;
+    if (second_name !== undefined) meta.second_name = second_name;
+    if (first_last_name !== undefined) meta.first_last_name = first_last_name;
+    if (second_last_name !== undefined) meta.second_last_name = second_last_name;
+    if (identification !== undefined) meta.identification = identification;
+    if (phone !== undefined) meta.phone = phone;
+    if (Object.keys(meta).length) patchBody.user_metadata = meta;
     const r = await fetch(`${base}/auth/v1/admin/users/${id}`, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify(body),
+      method: 'PUT', headers, body: JSON.stringify(patchBody),
     });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) return res.status(r.status).json({ error: data.message ?? 'Error actualizando usuario' });
