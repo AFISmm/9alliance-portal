@@ -171,8 +171,18 @@ export async function getItems(limit = 100): Promise<AlegraItem[]> {
 }
 
 export async function getContacts(): Promise<AlegraContact[]> {
-  const data = await proxy('contacts?limit=200');
-  return toList(data);
+  const all: AlegraContact[] = [];
+  let start = 0;
+  const limit = 30;
+  while (all.length < 300) {
+    const data = await proxy(`contacts?limit=${limit}&start=${start}`);
+    const batch = toList(data);
+    if (!batch.length) break;
+    all.push(...batch);
+    if (batch.length < limit) break;
+    start += limit;
+  }
+  return all;
 }
 
 // ── WRITE ─────────────────────────────────────────────────────────────────────
