@@ -5,12 +5,16 @@ interface LayoutContextType {
   sidebarCollapsed: boolean;
   setSidebarCollapsed: (v: boolean | ((p: boolean) => boolean)) => void;
   isMobile: boolean;
+  notificationOpen: boolean;
+  setNotificationOpen: (v: boolean) => void;
 }
 
 const LayoutContext = createContext<LayoutContextType>({
   sidebarCollapsed: false,
   setSidebarCollapsed: () => {},
   isMobile: false,
+  notificationOpen: false,
+  setNotificationOpen: () => {},
 });
 
 function getIsMobile() {
@@ -18,8 +22,9 @@ function getIsMobile() {
 }
 
 export function LayoutProvider({ children }: { children: ReactNode }) {
-  const [isMobile, setIsMobile]               = useState(getIsMobile);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => getIsMobile());
+  const [isMobile, setIsMobile]                     = useState(getIsMobile);
+  const [sidebarCollapsed, setSidebarCollapsed]     = useState(() => getIsMobile());
+  const [notificationOpen, setNotificationOpen]     = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)');
@@ -32,7 +37,11 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <LayoutContext.Provider value={{ sidebarCollapsed, setSidebarCollapsed, isMobile }}>
+    <LayoutContext.Provider value={{
+      sidebarCollapsed, setSidebarCollapsed,
+      isMobile,
+      notificationOpen, setNotificationOpen,
+    }}>
       {children}
     </LayoutContext.Provider>
   );

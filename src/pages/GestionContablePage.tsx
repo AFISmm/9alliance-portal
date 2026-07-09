@@ -5,6 +5,8 @@ import {
   getJournals, getInvoices, getAccounts,
   type AlegraJournal, type AlegraInvoice, type AlegraAccount,
 } from '../lib/alegraApi';
+import { useDemo } from '../context/DemoContext';
+import { DEMO_JOURNALS, DEMO_INVOICES, DEMO_ACCOUNTS } from '../data/demoAlegra';
 
 // ── Helpers ────────────────────────────────────────────────────────────
 function fmt(n: number): string {
@@ -51,17 +53,26 @@ const TD: React.CSSProperties = {
 
 // ── Component ──────────────────────────────────────────────────────────
 export default function GestionContablePage() {
+  const { demoMode } = useDemo();
+  const isDemo = demoMode === 'empresa';
+
   const [selectedId, setSelectedId]   = useState(realClients[0]?.id ?? '');
   const [activeTab, setActiveTab]     = useState<'comprobantes' | 'facturas' | 'cuentas'>('comprobantes');
-  const [loading, setLoading]         = useState(true);
+  const [loading, setLoading]         = useState(!isDemo);
   const [error, setError]             = useState('');
-  const [journals, setJournals]       = useState<AlegraJournal[]>([]);
-  const [invoices, setInvoices]       = useState<AlegraInvoice[]>([]);
-  const [accounts, setAccounts]       = useState<AlegraAccount[]>([]);
+  const [journals, setJournals]       = useState<AlegraJournal[]>(isDemo ? DEMO_JOURNALS : []);
+  const [invoices, setInvoices]       = useState<AlegraInvoice[]>(isDemo ? DEMO_INVOICES : []);
+  const [accounts, setAccounts]       = useState<AlegraAccount[]>(isDemo ? DEMO_ACCOUNTS : []);
 
   const selectedClient = realClients.find(c => c.id === selectedId);
 
   async function loadData() {
+    if (isDemo) {
+      setJournals(DEMO_JOURNALS);
+      setInvoices(DEMO_INVOICES);
+      setAccounts(DEMO_ACCOUNTS);
+      return;
+    }
     setLoading(true);
     setError('');
     try {

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
 import { useDemo } from '../context/DemoContext';
 import { Logo9A } from '../components/Logo9A';
-import { Play } from 'lucide-react';
+import { Building2, HardHat } from 'lucide-react';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -29,8 +29,8 @@ export default function Login() {
     navigate('/');
   }
 
-  function handleDemo() {
-    enterDemo();
+  function handleDemo(mode: 'empresa' | 'empleado') {
+    enterDemo(mode);
     navigate('/');
   }
 
@@ -69,22 +69,76 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Demo button */}
-        <div className="mt-4">
-          <div className="flex items-center gap-3 my-4">
+        {/* Demo options */}
+        <div className="mt-5">
+          <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 h-px bg-white/10" />
-            <span className="text-cream-200/30 text-xs">o</span>
+            <span className="text-cream-200/30 text-xs tracking-widest">DEMO</span>
             <div className="flex-1 h-px bg-white/10" />
           </div>
-          <button
-            onClick={handleDemo}
-            className="w-full flex items-center justify-center gap-2.5 border border-gold-500/30 hover:border-gold-500/60 hover:bg-gold-500/5 text-gold-400 font-semibold py-2.5 rounded-lg transition"
-          >
-            <Play size={15} strokeWidth={2} />
-            Explorar Demo
-          </button>
-          <p className="text-center text-[11px] text-cream-200/25 mt-2">
-            Empresas ficticias · Sin necesidad de cuenta
+
+          <div className="grid grid-cols-2 gap-3">
+            {/* Demo Empresa */}
+            <button
+              onClick={() => handleDemo('empresa')}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+                padding: '14px 10px',
+                background: 'rgba(201,168,76,.06)',
+                border: '1px solid rgba(201,168,76,.25)',
+                borderRadius: 10, cursor: 'pointer',
+                transition: 'all .15s',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(201,168,76,.12)';
+                (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(201,168,76,.5)';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(201,168,76,.06)';
+                (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(201,168,76,.25)';
+              }}
+            >
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(201,168,76,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Building2 size={17} strokeWidth={1.8} style={{ color: '#C9A84C' }} />
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 700, color: '#C9A84C', letterSpacing: '.04em' }}>DEMO EMPRESA</div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: '#7C8A9C', marginTop: 2 }}>Todos los módulos</div>
+              </div>
+            </button>
+
+            {/* Demo Empleado */}
+            <button
+              onClick={() => handleDemo('empleado')}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+                padding: '14px 10px',
+                background: 'rgba(74,127,212,.06)',
+                border: '1px solid rgba(74,127,212,.25)',
+                borderRadius: 10, cursor: 'pointer',
+                transition: 'all .15s',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(74,127,212,.12)';
+                (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(74,127,212,.5)';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(74,127,212,.06)';
+                (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(74,127,212,.25)';
+              }}
+            >
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(74,127,212,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <HardHat size={17} strokeWidth={1.8} style={{ color: '#4A7FD4' }} />
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 700, color: '#4A7FD4', letterSpacing: '.04em' }}>DEMO EMPLEADO</div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: '#7C8A9C', marginTop: 2 }}>Vista operativa</div>
+              </div>
+            </button>
+          </div>
+
+          <p className="text-center text-[10px] text-cream-200/20 mt-3">
+            Sin necesidad de cuenta · Datos ficticios
           </p>
         </div>
 

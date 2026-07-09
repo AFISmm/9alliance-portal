@@ -1,22 +1,24 @@
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
-import { AuthProvider }    from './auth/AuthContext';
-import { DemoProvider }    from './context/DemoContext';
-import { LayoutProvider }  from './context/LayoutContext';
-import { ProtectedRoute }  from './auth/ProtectedRoute';
-import { AppShell }        from './layout/AppShell';
-import Login               from './pages/Login';
-import Register            from './pages/Register';
-import InicioPage             from './pages/InicioPage';
-import GestionEstrategicaPage from './pages/GestionEstrategicaPage';
-import GestionComercialPage   from './pages/GestionComercialPage';
-import GestionOperativaPage   from './pages/GestionOperativaPage';
-import InformacionGeneralPage from './pages/InformacionGeneralPage';
-import AlegraPage             from './pages/AlegraPage';
-import ClientesExternos       from './pages/ClientesExternos';
-import ClientDetail           from './pages/ClientDetail';
-import PerfilPage             from './pages/PerfilPage';
-import GestionUsuariosPage    from './pages/GestionUsuariosPage';
-import GestionContablePage    from './pages/GestionContablePage';
+import { AuthProvider }            from './auth/AuthContext';
+import { DemoProvider }            from './context/DemoContext';
+import { LayoutProvider }          from './context/LayoutContext';
+import { NotificationProvider }    from './context/NotificationContext';
+import { ProtectedRoute }          from './auth/ProtectedRoute';
+import { AppShell }                from './layout/AppShell';
+import Login                       from './pages/Login';
+import Register                    from './pages/Register';
+import InicioPage                  from './pages/InicioPage';
+import GestionEstrategicaPage      from './pages/GestionEstrategicaPage';
+import GestionComercialPage        from './pages/GestionComercialPage';
+import GestionOperativaPage        from './pages/GestionOperativaPage';
+import InformacionGeneralPage      from './pages/InformacionGeneralPage';
+import AlegraPage                  from './pages/AlegraPage';
+import ClientesExternos            from './pages/ClientesExternos';
+import ClientDetail                from './pages/ClientDetail';
+import PerfilPage                  from './pages/PerfilPage';
+import GestionUsuariosPage         from './pages/GestionUsuariosPage';
+import GestionContablePage         from './pages/GestionContablePage';
+import GestionPQRsPage             from './pages/GestionPQRsPage';
 
 function RedirectClienteToEmpresa() {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +28,7 @@ function RedirectClienteToEmpresa() {
 export default function App() {
   return (
     <LayoutProvider>
+    <NotificationProvider>
     <DemoProvider>
       <AuthProvider>
         <BrowserRouter>
@@ -49,8 +52,9 @@ export default function App() {
               <Route path="gestion-operativa"   element={<GestionOperativaPage />} />
               <Route path="informacion-general" element={<InformacionGeneralPage />} />
               <Route path="perfil"              element={<PerfilPage />} />
-              <Route path="gestion-usuarios"   element={<GestionUsuariosPage />} />
-              <Route path="gestion-contable"   element={<GestionContablePage />} />
+              <Route path="gestion-usuarios"    element={<GestionUsuariosPage />} />
+              <Route path="gestion-contable"    element={<GestionContablePage />} />
+              <Route path="gestion-pqrs"        element={<GestionPQRsPage />} />
 
               <Route path="empresas"    element={<ClientesExternos />} />
               <Route path="empresa/:id" element={<ClientDetail />} />
@@ -69,6 +73,7 @@ export default function App() {
         </BrowserRouter>
       </AuthProvider>
     </DemoProvider>
+    </NotificationProvider>
     </LayoutProvider>
   );
 }
