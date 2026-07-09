@@ -7,14 +7,27 @@ const MODULE_NAMES: Record<string, string> = {
   '/inicio':              'Inicio',
   '/gestion-estrategica': 'Gestión Estratégica',
   '/gestion-financiera':  'Gestión Financiera',
+  '/gestion-contable':    'Gestión Contable',
   '/gestion-comercial':   'Gestión Comercial',
   '/gestion-operativa':   'Gestión Operativa',
   '/informacion-general': 'Información General',
   '/empresas':            'Empresas',
   '/empresa':             'Detalle de empresa',
   '/perfil':              'Mi perfil',
-  '/gestion-usuarios':   'Gestión de Usuarios',
+  '/gestion-usuarios':    'Gestión de Usuarios',
 };
+
+const DAY_NAMES  = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const MONTH_NAMES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+function formatDate(): string {
+  const d = new Date();
+  const day   = DAY_NAMES[d.getDay()];
+  const date  = String(d.getDate()).padStart(2, '0');
+  const month = MONTH_NAMES[d.getMonth()];
+  const year  = d.getFullYear();
+  return `${day} ${date} ${month} ${year}`;
+}
 
 export function TopBar() {
   const location = useLocation();
@@ -27,7 +40,7 @@ export function TopBar() {
   return (
     <header
       className="shrink-0 flex items-center justify-between px-6"
-      style={{ height: 44, background: '#0d1829', borderBottom: '1px solid rgba(255,255,255,.07)' }}
+      style={{ height: 48, background: '#070E15', borderBottom: '1px solid rgba(255,255,255,.07)' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         {sidebarCollapsed && (
@@ -38,32 +51,26 @@ export function TopBar() {
               background: 'rgba(201,168,76,.08)',
               border: '1px solid rgba(201,168,76,.2)',
               borderRadius: 7,
-              width: 28,
-              height: 28,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: '#C9A84C',
-              flexShrink: 0,
+              width: 28, height: 28,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: '#C9A84C', flexShrink: 0,
             }}
           >
             <PanelLeftOpen size={14} strokeWidth={1.8} />
           </button>
         )}
-        <p
-          style={{
-            margin: 0,
-            fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: 'rgba(174,188,205,.4)',
-            fontFamily: 'Inter, sans-serif',
-          }}
-        >
-          {moduleName}
-        </p>
+
+        {/* Breadcrumb — JetBrains Mono style */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, fontFamily: "'JetBrains Mono', monospace", fontSize: 11.5, letterSpacing: '.04em', color: '#7C8A9C' }}>
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#C9A84C', opacity: .8, flexShrink: 0, display: 'inline-block' }} />
+          {moduleName && (
+            <>
+              <span style={{ color: '#AEBCCD', fontWeight: 500 }}>{moduleName}</span>
+              <span style={{ opacity: .4 }}>·</span>
+            </>
+          )}
+          <span>{formatDate()}</span>
+        </div>
       </div>
 
       <LanguageSwitcher />

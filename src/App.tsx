@@ -16,6 +16,7 @@ import ClientesExternos       from './pages/ClientesExternos';
 import ClientDetail           from './pages/ClientDetail';
 import PerfilPage             from './pages/PerfilPage';
 import GestionUsuariosPage    from './pages/GestionUsuariosPage';
+import GestionContablePage    from './pages/GestionContablePage';
 
 function RedirectClienteToEmpresa() {
   const { id } = useParams<{ id: string }>();
@@ -49,6 +50,7 @@ export default function App() {
               <Route path="informacion-general" element={<InformacionGeneralPage />} />
               <Route path="perfil"              element={<PerfilPage />} />
               <Route path="gestion-usuarios"   element={<GestionUsuariosPage />} />
+              <Route path="gestion-contable"   element={<GestionContablePage />} />
 
               <Route path="empresas"    element={<ClientesExternos />} />
               <Route path="empresa/:id" element={<ClientDetail />} />

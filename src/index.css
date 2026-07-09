@@ -13,18 +13,60 @@
   --color-charcoal: #2a2826;
 }
 
+/* ── Design tokens ───────────────────────────────────────────────────── */
+:root {
+  --page:   #0d1829;
+  --card:   #111c2e;
+  --line:   rgba(255,255,255,.08);
+  --t1:     #F4F7FB;
+  --t2:     #AEBCCD;
+  --t3:     #7C8A9C;
+  --gold:   #C9A84C;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background-color: #1B2A4A;
-  color: #F8F7F4;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--page);
+  color: var(--t1);
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
+h1, h2, h3, h4, h5, h6 { font-family: 'Inter', sans-serif; }
+
 #root { min-height: 100vh; display: flex; flex-direction: column; }
 
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.35); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.6); }
+/* ── Scrollbar ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 10px; height: 10px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  {
+  background-color: rgba(201,168,76,.25);
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: rgba(201,168,76,.48); }
+
+/* ── Sidebar helpers ─────────────────────────────────────────────────── */
+.nav-active {
+  box-shadow: inset 3px 0 0 0 #C9A84C !important;
+}
+
+.sidebar-dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(201,168,76,.055) 1px, transparent 1px);
+  background-size: 18px 18px;
+  pointer-events: none;
+}
+
+/* ── Overline label ──────────────────────────────────────────────────── */
+.overline-9a {
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
