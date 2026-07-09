@@ -1,36 +1,58 @@
-import { Outlet }        from 'react-router-dom';
-import { Sidebar }        from './Sidebar';
-import { TopBar }         from './TopBar';
-import { CompanyFooter }  from '../components/CompanyFooter';
-import Chatbot            from '../components/Chatbot';
-import { useLayout }      from '../context/LayoutContext';
+import { Outlet }       from 'react-router-dom';
+import { Sidebar }       from './Sidebar';
+import { TopBar }        from './TopBar';
+import { CompanyFooter } from '../components/CompanyFooter';
+import Chatbot           from '../components/Chatbot';
+import { useLayout }     from '../context/LayoutContext';
 
 export function AppShell() {
-  const { sidebarCollapsed } = useLayout();
+  const { sidebarCollapsed, setSidebarCollapsed, isMobile } = useLayout();
 
   return (
-    <div className="flex min-h-screen w-full">
-      {/* Sidebar wrapper — animates width to hide/show */}
-      <div
-        style={{
-          width: sidebarCollapsed ? 0 : 240,
-          overflow: 'hidden',
-          transition: 'width 0.25s ease',
-          flexShrink: 0,
-        }}
-      >
+    <div style={{ display: 'flex', minHeight: '100vh', width: '100%', position: 'relative' }}>
+
+      {/* Mobile overlay backdrop */}
+      {isMobile && !sidebarCollapsed && (
+        <div
+          onClick={() => setSidebarCollapsed(true)}
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,.55)',
+            zIndex: 40,
+          }}
+        />
+      )}
+
+      {/* Sidebar wrapper — overlay on mobile, inline on desktop */}
+      <div style={isMobile ? {
+        position: 'fixed',
+        top: 0, left: 0, bottom: 0,
+        width: 240,
+        zIndex: 50,
+        transform: sidebarCollapsed ? 'translateX(-100%)' : 'translateX(0)',
+        transition: 'transform 0.25s ease',
+      } : {
+        width: sidebarCollapsed ? 0 : 240,
+        flexShrink: 0,
+        overflow: 'hidden',
+        transition: 'width 0.25s ease',
+      }}>
         <Sidebar />
       </div>
 
-      <div className="flex flex-col flex-1 min-w-0">
+      {/* Main content */}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, overflow: 'hidden' }}>
         <TopBar />
-        <main className="flex-1 overflow-auto py-6 px-8">
+        <main style={{
+          flex: 1,
+          overflow: 'auto',
+          padding: isMobile ? '14px 16px' : '24px 32px',
+        }}>
           <Outlet />
         </main>
         <CompanyFooter />
       </div>
 
-      {/* Chatbot fuera del flujo principal para evitar problemas de stacking */}
       <Chatbot />
     </div>
   );
