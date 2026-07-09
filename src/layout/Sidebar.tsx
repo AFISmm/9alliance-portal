@@ -39,10 +39,6 @@ const EMPLEADO_MODULES: NavItem[] = [
 ];
 
 // ── Helpers ─────────────────────────────────────────────────────────────
-function isAdminEmail(email: string | undefined): boolean {
-  return email === 'felipe@digeniusai.com' || (email ?? '').endsWith('@9alliance.co');
-}
-
 function rowCls(active: boolean) {
   return (
     'w-full flex items-center gap-3 px-3.5 py-[9px] rounded-[8px] ' +
@@ -87,13 +83,14 @@ export function Sidebar() {
   const email    = user?.email ?? '';
   const initials = email ? getInitials(email) : (isDemoMode ? 'DM' : 'U');
 
-  const isAdmin = isAdminEmail(email) || demoMode === 'empresa';
+  // PQRs visible para cualquier usuario real autenticado o en demo empresa
+  const showPQRs = (user !== null && demoMode === null) || demoMode === 'empresa';
 
   // Compute visible nav items based on mode
   const topItems     = demoMode === 'empleado' ? EMPLEADO_TOP     : ALL_TOP;
   const moduleItems  = demoMode === 'empleado' ? EMPLEADO_MODULES : [
     ...ALL_MODULES,
-    ...(isAdmin ? [PQR_ITEM] : []),
+    ...(showPQRs ? [PQR_ITEM] : []),
   ];
 
   const badge = demoBadgeStyle(demoMode);
