@@ -90,10 +90,10 @@ export const DEMO_CONTACTS: AlegraContact[] = [
 
 // ── Demo Items ──────────────────────────────────────────────────────────
 export const DEMO_ITEMS: AlegraItem[] = [
-  { id: 'I01', name: 'Consultoría estratégica (hora)',       type: 'service', price: 350_000, status: 'active' },
-  { id: 'I02', name: 'Diagnóstico organizacional',          type: 'service', price: 4_500_000, status: 'active' },
-  { id: 'I03', name: 'Gestión documental mensual',          type: 'service', price: 1_200_000, status: 'active' },
-  { id: 'I04', name: 'Asesoría financiera trimestral',      type: 'service', price: 8_000_000, status: 'active' },
-  { id: 'I05', name: 'Implementación ERP (licencia anual)', type: 'product', price: 12_000_000, status: 'active' },
-  { id: 'I06', name: 'Capacitación corporativa (grupo)',    type: 'service', price: 2_800_000, status: 'active' },
+  { id: 101, name: 'Consultoría estratégica (hora)',       type: 'service', price: [{ idPriceList: 1, name: 'Precio base', price: 350_000 }],     status: 'active' },
+  { id: 102, name: 'Diagnóstico organizacional',          type: 'service', price: [{ idPriceList: 1, name: 'Precio base', price: 4_500_000 }],   status: 'active' },
+  { id: 103, name: 'Gestión documental mensual',          type: 'service', price: [{ idPriceList: 1, name: 'Precio base', price: 1_200_000 }],   status: 'active' },
+  { id: 104, name: 'Asesoría financiera trimestral',      type: 'service', price: [{ idPriceList: 1, name: 'Precio base', price: 8_000_000 }],   status: 'active' },
+  { id: 105, name: 'Implementación ERP (licencia anual)', type: 'product', price: [{ idPriceList: 1, name: 'Precio base', price: 12_000_000 }],  status: 'active' },
+  { id: 106, name: 'Capacitación corporativa (grupo)',    type: 'service', price: [{ idPriceList: 1, name: 'Precio base', price: 2_800_000 }],   status: 'active' },
 ];

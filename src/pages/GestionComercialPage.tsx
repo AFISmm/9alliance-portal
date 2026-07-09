@@ -91,7 +91,6 @@ function DemoComercial() {
           {FUNNEL_STAGES.map((stage, i) => {
             const leads = DEMO_LEADS.filter(l => l.etapa === stage);
             const cfg   = STAGE_CFG[stage];
-            const pct   = Math.round((leads.length / FUNNEL_STAGES.length) * 100);
             return (
               <div key={stage} style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 100 }}>
                 <button
