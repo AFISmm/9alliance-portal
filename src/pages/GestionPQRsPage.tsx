@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   MessageSquarePlus, Send, Clock, CheckCircle2,
   AlertCircle, User, Hash, Mail, Lock, FileText,
-  Inbox, ChevronRight, Reply, X,
+  Loader2, Inbox, ChevronRight, Reply, X,
 } from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
 import { useDemo } from '../context/DemoContext';
