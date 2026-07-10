@@ -36,6 +36,7 @@ const EMPLEADO_TOP: NavItem[]     = [{ label: 'INICIO', path: '/inicio', Icon: H
 const EMPLEADO_MODULES: NavItem[] = [
   { label: 'GESTIÓN OPERATIVA', path: '/gestion-operativa', Icon: SlidersHorizontal },
   { label: 'MI PERFIL',         path: '/perfil',            Icon: UserCog           },
+  { label: 'RADICAR PQR',       path: '/gestion-pqrs',      Icon: MessageSquarePlus },
 ];
 
 // ── Helpers ─────────────────────────────────────────────────────────────
