@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   MessageSquarePlus, Send, Clock, CheckCircle2,
   AlertCircle, User, Hash, Mail, Lock, FileText,
-  Loader2, Inbox, ChevronRight, Reply, X,
+  Inbox, ChevronRight, Reply, X,
 } from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
 import { useDemo } from '../context/DemoContext';
@@ -102,9 +102,7 @@ export default function GestionPQRsPage() {
   // Developer: respuesta por PQR
   const [respondingId, setRespondingId] = useState<string | null>(null);
   const [respuestaText, setRespuestaText] = useState('');
-  const [sending, setSending]   = useState(false);
-  const [sendOk, setSendOk]     = useState<string | null>(null); // pqr id que acaba de resolverse
-  const [sendErr, setSendErr]   = useState('');
+  const [sendOk, setSendOk] = useState<string | null>(null);
 
   // Form state (demo view)
   const [nombre,         setNombre]         = useState('');
@@ -154,40 +152,16 @@ export default function GestionPQRsPage() {
     if (selected?.id === id) setSelected(prev => prev ? { ...prev, estado } : prev);
   }
 
-  async function handleSendResponse(p: PQR) {
+  function handleSendResponse(p: PQR) {
     const texto = respuestaText.trim();
     if (!texto) return;
-    setSending(true);
-    setSendErr('');
-    try {
-      const res = await fetch('/api/pqr-response', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nombre:    p.nombre,
-          apellido:  p.apellido,
-          correo:    p.correo,
-          mensaje:   p.mensaje,
-          respuesta: texto,
-        }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? `HTTP ${res.status}`);
-      }
-      // Marcar como resuelta y guardar respuesta
-      const updated: PQR = { ...p, estado: 'resuelta', respuesta: texto, respondidoEn: Date.now() };
-      setPQRs(prev => prev.map(q => q.id === p.id ? updated : q));
-      setSelected(updated);
-      setRespondingId(null);
-      setRespuestaText('');
-      setSendOk(p.id);
-      setTimeout(() => setSendOk(null), 5000);
-    } catch (e: unknown) {
-      setSendErr(e instanceof Error ? e.message : 'Error al enviar');
-    } finally {
-      setSending(false);
-    }
+    const updated: PQR = { ...p, estado: 'resuelta', respuesta: texto, respondidoEn: Date.now() };
+    setPQRs(prev => prev.map(q => q.id === p.id ? updated : q));
+    setSelected(updated);
+    setRespondingId(null);
+    setRespuestaText('');
+    setSendOk(p.id);
+    setTimeout(() => setSendOk(null), 5000);
   }
 
   const counts = {
@@ -420,32 +394,24 @@ export default function GestionPQRsPage() {
                               resize: 'vertical', outline: 'none', minHeight: 100,
                             }}
                           />
-                          {sendErr && (
-                            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11.5, color: '#f87171' }}>
-                              {sendErr}
-                            </span>
-                          )}
                           <div style={{ display: 'flex', gap: 8 }}>
                             <button
                               onClick={() => handleSendResponse(p)}
-                              disabled={sending || !respuestaText.trim()}
+                              disabled={!respuestaText.trim()}
                               style={{
                                 display: 'flex', alignItems: 'center', gap: 6,
                                 padding: '7px 16px', borderRadius: 7,
-                                background: sending || !respuestaText.trim() ? 'rgba(201,168,76,.4)' : '#C9A84C',
+                                background: !respuestaText.trim() ? 'rgba(201,168,76,.4)' : '#C9A84C',
                                 border: 'none', color: '#0d1829',
                                 fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 700,
-                                cursor: sending || !respuestaText.trim() ? 'not-allowed' : 'pointer',
+                                cursor: !respuestaText.trim() ? 'not-allowed' : 'pointer',
                               }}
                             >
-                              {sending
-                                ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} />
-                                : <Send size={12} strokeWidth={2} />
-                              }
-                              {sending ? 'Enviando…' : 'Enviar respuesta'}
+                              <Send size={12} strokeWidth={2} />
+                              Guardar respuesta
                             </button>
                             <button
-                              onClick={() => { setRespondingId(null); setRespuestaText(''); setSendErr(''); }}
+                              onClick={() => { setRespondingId(null); setRespuestaText(''); }}
                               style={{
                                 display: 'flex', alignItems: 'center', gap: 5,
                                 padding: '7px 12px', borderRadius: 7,
