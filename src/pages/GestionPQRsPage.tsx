@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   MessageSquarePlus, Send, Clock, CheckCircle2,
   AlertCircle, User, Hash, Mail, Lock, FileText,
-  Loader2, Inbox, ChevronRight,
+  Loader2, Inbox, ChevronRight, Reply, X,
 } from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
 import { useDemo } from '../context/DemoContext';
@@ -20,6 +20,8 @@ interface PQR {
   mensaje: string;
   estado: PQRStatus;
   timestamp: number;
+  respuesta?: string;
+  respondidoEn?: number;
 }
 
 const LS_KEY     = '9a_pqrs_v1';
@@ -94,10 +96,17 @@ function InputField({
 export default function GestionPQRsPage() {
   const { demoMode } = useDemo();
   const { addNotification } = useNotifications();
-  const [pqrs, setPQRs] = useState<PQR[]>(loadPQRs);
+  const [pqrs, setPQRs]     = useState<PQR[]>(loadPQRs);
   const [selected, setSelected] = useState<PQR | null>(null);
 
-  // Form state
+  // Developer: respuesta por PQR
+  const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [respuestaText, setRespuestaText] = useState('');
+  const [sending, setSending]   = useState(false);
+  const [sendOk, setSendOk]     = useState<string | null>(null); // pqr id que acaba de resolverse
+  const [sendErr, setSendErr]   = useState('');
+
+  // Form state (demo view)
   const [nombre,         setNombre]         = useState('');
   const [apellido,       setApellido]       = useState('');
   const [identificacion, setIdentificacion] = useState('');
@@ -111,7 +120,7 @@ export default function GestionPQRsPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
-    await new Promise(r => setTimeout(r, 700)); // simulated delay
+    await new Promise(r => setTimeout(r, 700));
 
     const pqr: PQR = {
       id: `pqr_${Date.now()}`,
@@ -143,6 +152,42 @@ export default function GestionPQRsPage() {
   function changeStatus(id: string, estado: PQRStatus) {
     setPQRs(prev => prev.map(p => p.id === id ? { ...p, estado } : p));
     if (selected?.id === id) setSelected(prev => prev ? { ...prev, estado } : prev);
+  }
+
+  async function handleSendResponse(p: PQR) {
+    const texto = respuestaText.trim();
+    if (!texto) return;
+    setSending(true);
+    setSendErr('');
+    try {
+      const res = await fetch('/api/pqr-response', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre:    p.nombre,
+          apellido:  p.apellido,
+          correo:    p.correo,
+          mensaje:   p.mensaje,
+          respuesta: texto,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? `HTTP ${res.status}`);
+      }
+      // Marcar como resuelta y guardar respuesta
+      const updated: PQR = { ...p, estado: 'resuelta', respuesta: texto, respondidoEn: Date.now() };
+      setPQRs(prev => prev.map(q => q.id === p.id ? updated : q));
+      setSelected(updated);
+      setRespondingId(null);
+      setRespuestaText('');
+      setSendOk(p.id);
+      setTimeout(() => setSendOk(null), 5000);
+    } catch (e: unknown) {
+      setSendErr(e instanceof Error ? e.message : 'Error al enviar');
+    } finally {
+      setSending(false);
+    }
   }
 
   const counts = {
@@ -329,23 +374,131 @@ export default function GestionPQRsPage() {
                         <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 9.5, fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: '#566375' }}>Mensaje</span>
                         <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: '#AEBCCD', marginTop: 5, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{p.mensaje}</p>
                       </div>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: '#566375', alignSelf: 'center', marginRight: 4 }}>Cambiar estado:</span>
-                        {(['nueva', 'en_revision', 'resuelta'] as PQRStatus[]).map(s => {
-                          const c = statusConfig(s);
-                          return (
-                            <button key={s} onClick={() => changeStatus(p.id, s)} style={{
-                              padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                              fontFamily: "'DM Sans', sans-serif",
-                              background: p.estado === s ? c.bg : 'rgba(255,255,255,.04)',
-                              border: `1px solid ${p.estado === s ? c.color + '66' : 'rgba(255,255,255,.08)'}`,
-                              color: p.estado === s ? c.color : '#7C8A9C',
-                            }}>
-                              {c.label}
+
+                      {/* Respuesta existente */}
+                      {p.respuesta && (
+                        <div style={{ background: 'rgba(201,168,76,.07)', border: '1px solid rgba(201,168,76,.2)', borderRadius: 8, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Reply size={12} strokeWidth={2} style={{ color: '#C9A84C' }} />
+                            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 9.5, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: '#C9A84C' }}>Respuesta enviada</span>
+                            {p.respondidoEn && (
+                              <span style={{ marginLeft: 'auto', fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#566375' }}>
+                                {new Date(p.respondidoEn).toLocaleString('es-CO')}
+                              </span>
+                            )}
+                          </div>
+                          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: '#F4F7FB', margin: 0, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{p.respuesta}</p>
+                        </div>
+                      )}
+
+                      {/* Success banner */}
+                      {sendOk === p.id && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)' }}>
+                          <CheckCircle2 size={13} strokeWidth={2} style={{ color: '#22c55e', flexShrink: 0 }} />
+                          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#86efac' }}>
+                            Respuesta enviada al correo del solicitante. PQR marcada como resuelta.
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Formulario de respuesta */}
+                      {respondingId === p.id ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          <label style={{ fontFamily: "'Inter', sans-serif", fontSize: 9.5, fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: '#566375' }}>
+                            Escribir respuesta
+                          </label>
+                          <textarea
+                            value={respuestaText}
+                            onChange={e => setRespuestaText(e.target.value)}
+                            placeholder="Escribe aquí la respuesta que se enviará por correo al solicitante…"
+                            rows={4}
+                            style={{
+                              width: '100%', boxSizing: 'border-box',
+                              background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.12)',
+                              borderRadius: 8, padding: '9px 12px',
+                              color: '#F4F7FB', fontFamily: "'DM Sans', sans-serif", fontSize: 13,
+                              resize: 'vertical', outline: 'none', minHeight: 100,
+                            }}
+                          />
+                          {sendErr && (
+                            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11.5, color: '#f87171' }}>
+                              {sendErr}
+                            </span>
+                          )}
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button
+                              onClick={() => handleSendResponse(p)}
+                              disabled={sending || !respuestaText.trim()}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 6,
+                                padding: '7px 16px', borderRadius: 7,
+                                background: sending || !respuestaText.trim() ? 'rgba(201,168,76,.4)' : '#C9A84C',
+                                border: 'none', color: '#0d1829',
+                                fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 700,
+                                cursor: sending || !respuestaText.trim() ? 'not-allowed' : 'pointer',
+                              }}
+                            >
+                              {sending
+                                ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} />
+                                : <Send size={12} strokeWidth={2} />
+                              }
+                              {sending ? 'Enviando…' : 'Enviar respuesta'}
                             </button>
-                          );
-                        })}
-                      </div>
+                            <button
+                              onClick={() => { setRespondingId(null); setRespuestaText(''); setSendErr(''); }}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 5,
+                                padding: '7px 12px', borderRadius: 7,
+                                background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.1)',
+                                color: '#7C8A9C', fontFamily: "'DM Sans', sans-serif", fontSize: 12,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <X size={12} strokeWidth={2} />
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        p.estado !== 'resuelta' && !p.respuesta && (
+                          <div>
+                            <button
+                              onClick={() => { setRespondingId(p.id); setRespuestaText(''); setSendErr(''); }}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 6,
+                                padding: '7px 14px', borderRadius: 7,
+                                background: 'rgba(201,168,76,.1)', border: '1px solid rgba(201,168,76,.25)',
+                                color: '#C9A84C', fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 600,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <Reply size={13} strokeWidth={2} />
+                              Responder
+                            </button>
+                          </div>
+                        )
+                      )}
+
+                      {/* Estado manual (solo cuando no se está respondiendo) */}
+                      {respondingId !== p.id && (
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: '#566375', alignSelf: 'center', marginRight: 4 }}>Cambiar estado:</span>
+                          {(['nueva', 'en_revision', 'resuelta'] as PQRStatus[]).map(s => {
+                            const c = statusConfig(s);
+                            return (
+                              <button key={s} onClick={() => changeStatus(p.id, s)} style={{
+                                padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                                fontFamily: "'DM Sans', sans-serif",
+                                background: p.estado === s ? c.bg : 'rgba(255,255,255,.04)',
+                                border: `1px solid ${p.estado === s ? c.color + '66' : 'rgba(255,255,255,.08)'}`,
+                                color: p.estado === s ? c.color : '#7C8A9C',
+                              }}>
+                                {c.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
