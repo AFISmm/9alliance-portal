@@ -22,8 +22,9 @@ interface PQR {
   timestamp: number;
 }
 
-const LS_KEY = '9a_pqrs_v1';
-const ADMIN_EMAIL = 'felipe@digeniusai.com';
+const LS_KEY     = '9a_pqrs_v1';
+const ADMIN_NAME  = 'FELIPE SERNA';
+const ADMIN_EMAIL = 'felipe.serna@mercurymethods.com';
 
 function loadPQRs(): PQR[] {
   try { return JSON.parse(localStorage.getItem(LS_KEY) ?? '[]'); }
@@ -172,7 +173,7 @@ export default function GestionPQRsPage() {
             </div>
             <InputField label="N° Identificación"   icon={Hash} value={identificacion} onChange={setIdentificacion} placeholder="CC / NIT" required />
             <InputField label="Correo electrónico"  icon={Mail} type="email" value={correo} onChange={setCorreo} placeholder="correo@ejemplo.com" required />
-            <InputField label="Enviar PQR a"        icon={Mail} value={ADMIN_EMAIL} disabled />
+            <InputField label="Enviar PQR a"        icon={User} value={ADMIN_NAME} disabled />
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
               <label style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: '#7C8A9C' }}>
