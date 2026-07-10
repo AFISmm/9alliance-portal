@@ -429,7 +429,7 @@ export default function GestionPQRsPage() {
                         p.estado !== 'resuelta' && !p.respuesta && (
                           <div>
                             <button
-                              onClick={() => { setRespondingId(p.id); setRespuestaText(''); setSendErr(''); }}
+                              onClick={() => { setRespondingId(p.id); setRespuestaText(''); }}
                               style={{
                                 display: 'flex', alignItems: 'center', gap: 6,
                                 padding: '7px 14px', borderRadius: 7,
