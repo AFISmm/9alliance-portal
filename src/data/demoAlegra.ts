@@ -1,6 +1,8 @@
 import type {
-  AlegraJournal, AlegraInvoice, AlegraAccount, AlegraExpense, AlegraContact, AlegraItem,
+  AlegraJournal, AlegraInvoice, AlegraAccount, AlegraExpense,
+  AlegraContact, AlegraItem, AlegraCostCenter,
 } from '../lib/alegraApi';
+import type { Contract } from './contracts';
 
 // ── Demo Journals ───────────────────────────────────────────────────────
 export const DEMO_JOURNALS: AlegraJournal[] = [
@@ -86,6 +88,59 @@ export const DEMO_CONTACTS: AlegraContact[] = [
   { id: 106, name: 'Distribuidora Central SAS',   identificationObject: { number: '903210987', type: 'NIT' }, email: 'distribuidora@central.co',  phonePrimary: '+57 4 6052223344', type: ['client'],  status: 'active' },
   { id: 107, name: 'Sofía Ramírez',               identificationObject: { number: '1023456789', type: 'CC' }, email: 'sofia.ramirez@gmail.com',  phonePrimary: '+57 3106665544',   type: ['supplier'], status: 'active' },
   { id: 108, name: 'Carlos Mendoza Asociados',    identificationObject: { number: '904567890', type: 'NIT' }, email: 'cmendoza@asociados.co',    phonePrimary: '+57 1 3204567890', type: ['supplier'], status: 'active' },
+];
+
+// -- Demo Cost Centers
+export const DEMO_COST_CENTERS: AlegraCostCenter[] = [
+  { id: 1, name: 'Consultoria estrategica',    code: 'CC-01', status: 'active', description: 'Proyectos de consultoria y asesoria organizacional' },
+  { id: 2, name: 'Gestion documental',         code: 'CC-02', status: 'active', description: 'Servicios de archivo y gestion de documentos' },
+  { id: 3, name: 'Asesoria financiera',        code: 'CC-03', status: 'active', description: 'Consultoria financiera y tributaria' },
+  { id: 4, name: 'Implementacion de sistemas', code: 'CC-04', status: 'active', description: 'ERP, software y digitalizacion' },
+  { id: 5, name: 'Administracion interna',     code: 'CC-05', status: 'active', description: 'Gastos operativos de la firma' },
+];
+
+// -- Demo Contracts
+export const DEMO_CONTRACTS: Contract[] = [
+  {
+    id: 'ct_demo_001', clienteId: 'demo-001',
+    nombre: 'Consultoria estrategica anual',
+    descripcion: 'Asesoria mensual en transformacion organizacional',
+    costCenterId: 1, costCenterName: 'Consultoria estrategica',
+    valorContrato: 84_000_000, fechaInicio: '2026-01-01', fechaFin: '2026-12-31',
+    estado: 'activo', responsable: 'Felipe Serna', timestamp: 1_750_000_000_000,
+  },
+  {
+    id: 'ct_demo_002', clienteId: 'demo-002',
+    nombre: 'Servicios de gestion documental',
+    descripcion: 'Archivo y digitalizacion de documentos historicos',
+    costCenterId: 2, costCenterName: 'Gestion documental',
+    valorContrato: 36_000_000, fechaInicio: '2026-02-01', fechaFin: '2026-07-31',
+    estado: 'activo', responsable: 'Felipe Serna', timestamp: 1_750_000_001_000,
+  },
+  {
+    id: 'ct_demo_003', clienteId: 'demo-003',
+    nombre: 'Asesoria financiera trimestral',
+    descripcion: 'Revision de estados financieros y planeacion tributaria',
+    costCenterId: 3, costCenterName: 'Asesoria financiera',
+    valorContrato: 24_000_000, fechaInicio: '2026-01-01',
+    estado: 'activo', responsable: 'Felipe Serna', timestamp: 1_750_000_002_000,
+  },
+  {
+    id: 'ct_demo_004', clienteId: 'demo-004',
+    nombre: 'Implementacion modulo ERP',
+    descripcion: 'Puesta en marcha y capacitacion del sistema contable',
+    costCenterId: 4, costCenterName: 'Implementacion de sistemas',
+    valorContrato: 48_000_000, fechaInicio: '2025-09-01', fechaFin: '2025-12-31',
+    estado: 'finalizado', responsable: 'Felipe Serna', timestamp: 1_750_000_003_000,
+  },
+  {
+    id: 'ct_demo_005', clienteId: 'demo-005',
+    nombre: 'Outsourcing contable mensual',
+    descripcion: 'Contabilidad externalizada completa',
+    costCenterId: 3, costCenterName: 'Asesoria financiera',
+    valorContrato: 18_000_000, fechaInicio: '2026-03-01',
+    estado: 'activo', responsable: 'Felipe Serna', timestamp: 1_750_000_004_000,
+  },
 ];
 
 // ── Demo Items ──────────────────────────────────────────────────────────

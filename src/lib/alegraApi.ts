@@ -138,6 +138,14 @@ export interface AlegraItem {
   inventory?: { quantity: number };
 }
 
+export interface AlegraCostCenter {
+  id: number;
+  name: string;
+  code?: string;
+  description?: string;
+  status: string;
+}
+
 // ── READ ──────────────────────────────────────────────────────────────────────
 
 export async function getNumberTemplates(): Promise<any[]> {
@@ -167,6 +175,11 @@ export async function getExpenses(limit = 30): Promise<AlegraExpense[]> {
 
 export async function getItems(limit = 100): Promise<AlegraItem[]> {
   const data = await proxy(`items?limit=${limit}`);
+  return toList(data);
+}
+
+export async function getCostCenters(): Promise<AlegraCostCenter[]> {
+  const data = await proxy('cost-centers?limit=100');
   return toList(data);
 }
 
