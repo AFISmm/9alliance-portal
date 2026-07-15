@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { clients, clientsMap } from '../data/clients';
 import { obligaciones, obligacionesMap } from '../data/obligaciones';
 import { getAllVencimientos } from '../lib/getVencimientos';
-import { getAlertConfig, loadNotifiedIds, markNotified } from '../data/alertConfig';
+import { getAlertConfig, loadNotifiedIds, markNotified, addLogEnvio } from '../data/alertConfig';
 import { useNotifications } from '../context/NotificationContext';
 
 /**
@@ -51,13 +51,25 @@ export function useAlertCheck() {
       // No duplicar si ya hay una notificación para esta empresa/obligación
       if (existingHrefs.has(href)) return;
 
+      const titulo = esVencido
+        ? `Obligación vencida: ${oblig?.nombre ?? v.obligacionId}`
+        : `Próxima a vencer (${diffDias}d): ${oblig?.nombre ?? v.obligacionId}`;
+
       addNotification({
         type:  esVencido ? 'alert' : 'info',
-        title: esVencido
-          ? `Obligación vencida: ${oblig?.nombre ?? v.obligacionId}`
-          : `Próxima a vencer (${diffDias}d): ${oblig?.nombre ?? v.obligacionId}`,
+        title: titulo,
         body:  `${cliente?.nombre ?? v.clienteId} · ${v.fechaExactaLabel ?? v.rangoFechas}`,
         href,
+      });
+
+      addLogEnvio({
+        clienteId:     v.clienteId,
+        obligacionId:  v.obligacionId,
+        vencimientoId: v.id,
+        canal:         'in-app',
+        destinatario:  'Portal 9A',
+        asunto:        titulo,
+        estado:        'enviado',
       });
 
       markNotified(v.id);

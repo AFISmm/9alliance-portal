@@ -7,13 +7,13 @@ import { obligaciones, obligacionesMap } from '../data/obligaciones';
 import { getVencimientos } from '../lib/getVencimientos';
 import type { Estado } from '../lib/getVencimientos';
 import { StatusBadge } from '../components/StatusBadge';
-import { Pencil, Check, X, Bell, BellOff, ShieldCheck, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Pencil, Check, X, Bell, BellOff, ShieldCheck, Plus, ChevronDown, ChevronUp, ScrollText } from 'lucide-react';
 import {
   getAlertConfig, saveAlertConfig, DIAS_OPCIONES,
   loadComplianceActions, saveComplianceActions,
-  clearNotifiedForVencimiento,
+  clearNotifiedForVencimiento, getLogForCliente,
 } from '../data/alertConfig';
-import type { AccionCompliance } from '../data/alertConfig';
+import type { AccionCompliance, LogEnvio } from '../data/alertConfig';
 
 const META_KEY = '9a_client_meta_v1';
 
@@ -91,6 +91,7 @@ export default function ClientDetail() {
 
   // ── Acciones de compliance ────────────────────────────────────────────────
   const [complianceActions, setComplianceActions] = useState<AccionCompliance[]>(() => loadComplianceActions());
+  const [notifLog] = useState<LogEnvio[]>(() => id ? getLogForCliente(id) : []);
   const [expandedVenc, setExpandedVenc] = useState<string | null>(null);
   const [registeringFor, setRegisteringFor] = useState<string | null>(null);
   const [draftAccion, setDraftAccion] = useState({ responsable: '', nota: '' });
@@ -533,6 +534,68 @@ export default function ClientDetail() {
       <p className="text-xs text-cream-200/30 border-t border-white/10 pt-3">
         ⚖️ {t('calendario.notaFechas')}
       </p>
+
+      {/* ── Bitácora de alertas enviadas ── */}
+      <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 10, padding: '16px 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
+          <ScrollText size={15} strokeWidth={1.7} style={{ color: '#C9A84C' }} />
+          <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 700, color: '#F4F7FB', margin: 0 }}>
+            Bitácora de alertas enviadas
+          </h2>
+          {notifLog.length > 0 && (
+            <span style={{ marginLeft: 'auto', fontFamily: "'JetBrains Mono', monospace", fontSize: 10.5, color: '#7C8A9C' }}>
+              {notifLog.length} registro{notifLog.length !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+        {notifLog.length === 0 ? (
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: '#566375', margin: 0 }}>
+            Aún no se han enviado alertas para esta empresa. Cuando se detecte un vencimiento próximo o vencido, quedará registrado aquí.
+          </p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
+              <thead>
+                <tr>
+                  {['Fecha', 'Canal', 'Destinatario', 'Asunto', 'Estado'].map(h => (
+                    <th key={h} style={{ padding: '8px 10px', textAlign: 'left', fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: '#7C8A9C', background: 'rgba(255,255,255,.02)', whiteSpace: 'nowrap' }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {notifLog.map(entry => (
+                  <tr key={entry.id}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.02)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                    <td style={{ padding: '8px 10px', fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#7C8A9C', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+                      {new Date(entry.timestamp).toLocaleString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                    <td style={{ padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+                      <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 99, background: 'rgba(201,168,76,.1)', color: '#C9A84C', fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 600 }}>
+                        {entry.canal}
+                      </span>
+                    </td>
+                    <td style={{ padding: '8px 10px', fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#AEBCCD', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+                      {entry.destinatario}
+                    </td>
+                    <td style={{ padding: '8px 10px', fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#F4F7FB', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,.04)' }} title={entry.asunto}>
+                      {entry.asunto}
+                    </td>
+                    <td style={{ padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 99, background: entry.estado === 'enviado' ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)', color: entry.estado === 'enviado' ? '#22c55e' : '#ef4444', fontSize: 11, fontWeight: 600 }}>
+                        <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'currentColor' }} />
+                        {entry.estado === 'enviado' ? 'Enviado' : 'Fallido'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

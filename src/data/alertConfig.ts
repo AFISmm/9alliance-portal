@@ -58,6 +58,36 @@ export function getActionsForVencimiento(vencimientoId: string): AccionComplianc
   return loadComplianceActions().filter(a => a.vencimientoId === vencimientoId);
 }
 
+// ── Log de envíos (bitácora) ──────────────────────────────────────────────
+export interface LogEnvio {
+  id: string;
+  clienteId: string;
+  obligacionId: string;
+  vencimientoId: string;
+  canal: 'in-app' | 'correo' | 'whatsapp' | 'teams';
+  destinatario: string;
+  asunto: string;
+  timestamp: number;
+  estado: 'enviado' | 'fallido';
+}
+
+const LOG_KEY = '9a_notif_log_v1';
+
+export function loadNotificationLog(): LogEnvio[] {
+  try { return JSON.parse(localStorage.getItem(LOG_KEY) ?? '[]'); }
+  catch { return []; }
+}
+
+export function addLogEnvio(entry: Omit<LogEnvio, 'id' | 'timestamp'>): void {
+  const log = loadNotificationLog();
+  const newEntry: LogEnvio = { ...entry, id: `log_${Date.now()}_${Math.random().toString(36).slice(2,7)}`, timestamp: Date.now() };
+  try { localStorage.setItem(LOG_KEY, JSON.stringify([newEntry, ...log].slice(0, 500))); } catch {}
+}
+
+export function getLogForCliente(clienteId: string): LogEnvio[] {
+  return loadNotificationLog().filter(e => e.clienteId === clienteId);
+}
+
 // ── Dedupe de notificaciones ───────────────────────────────────────────────
 // Guardamos los IDs de vencimientos ya notificados para no spamear
 export function loadNotifiedIds(): Set<string> {

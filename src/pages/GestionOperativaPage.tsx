@@ -5,8 +5,9 @@ import {
   Calendar, Briefcase, CheckCircle2, ArrowRight,
   Download, Upload, Plus, Clock, AlertCircle,
   Monitor, Smartphone, KeyRound, Users, ClipboardList,
-  FolderOpen, ChevronRight, Lock, Eye, EyeOff,
+  FolderOpen, ChevronRight, Lock, Eye, EyeOff, Check,
 } from 'lucide-react';
+import { addCertificateRequest, loadCertificates, type CertificateRequest } from '../data/certificates';
 
 // ── 9 Alliance palette ─────────────────────────────────────────────────────
 const GOLD    = '#C9A84C';
@@ -475,36 +476,91 @@ function ModObjetivos({ tk }: { tk: Tk }) {
 }
 
 function ModCertificados({ tk }: { tk: Tk }) {
+  const EMPLEADO_DEMO = 'Mateo Rivera';
+  const [history, setHistory] = useState<CertificateRequest[]>(() => loadCertificates());
+  const [justRequested, setJustRequested] = useState<string | null>(null);
+
   const certs = [
-    { title: 'Certificado laboral',          desc: 'Constancia de vinculación y cargo',              time: '24 hrs' },
-    { title: 'Certificado de ingresos',       desc: 'Salario para trámites bancarios o de crédito',  time: '48 hrs' },
-    { title: 'Certificado de vacaciones',    desc: 'Estado de días disponibles y tomados',           time: '24 hrs' },
-    { title: 'Paz y salvo',                  desc: 'Certificado de no deudas con la empresa',        time: '72 hrs' },
-    { title: 'Certificado EPS',              desc: 'Comprobante de afiliación a salud',              time: '24 hrs' },
-    { title: 'Carta de referencia laboral',  desc: 'Para crédito, arrendamiento u otros trámites',   time: '5 días' },
+    { title: 'Certificado laboral',         desc: 'Constancia de vinculación y cargo',              time: '24 hrs' },
+    { title: 'Certificado de ingresos',      desc: 'Salario para trámites bancarios o de crédito',  time: '48 hrs' },
+    { title: 'Certificado de vacaciones',   desc: 'Estado de días disponibles y tomados',           time: '24 hrs' },
+    { title: 'Paz y salvo',                 desc: 'Certificado de no deudas con la empresa',        time: '72 hrs' },
+    { title: 'Certificado EPS',             desc: 'Comprobante de afiliación a salud',              time: '24 hrs' },
+    { title: 'Carta de referencia laboral', desc: 'Para crédito, arrendamiento u otros trámites',   time: '5 días' },
   ];
+
+  function handleSolicitar(tipo: string) {
+    addCertificateRequest(tipo, EMPLEADO_DEMO);
+    setHistory(loadCertificates());
+    setJustRequested(tipo);
+    setTimeout(() => setJustRequested(null), 3000);
+  }
+
+  const estadoStyle = (e: CertificateRequest['estado']) => ({
+    solicitado:  { bg: 'rgba(201,168,76,.12)',  c: GOLD,      label: 'Solicitado'  },
+    en_proceso:  { bg: 'rgba(59,130,246,.12)',  c: '#3b82f6', label: 'En proceso'  },
+    entregado:   { bg: 'rgba(34,197,94,.12)',   c: '#22c55e', label: 'Entregado'   },
+  }[e]);
+
   return (
     <div>
       <ModTitle tk={tk} title="Certificados" subtitle="Solicita documentos oficiales de tu vinculación" />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
-        {certs.map((c, i) => (
-          <div key={i} style={{ ...cardStyle(tk), padding: 18 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-              <div style={{ width: 38, height: 38, borderRadius: 9, background: tk.goldBg, border: `1px solid ${GOLD}33`, display: 'grid', placeItems: 'center', color: GOLD, flexShrink: 0 }}><ShieldCheck size={17} strokeWidth={1.75} /></div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600, color: tk.t1 }}>{c.title}</div>
-                <div style={{ fontSize: 12.5, color: tk.t3, marginTop: 3 }}>{c.desc}</div>
+        {certs.map((c, i) => {
+          const done = justRequested === c.title;
+          return (
+            <div key={i} style={{ ...cardStyle(tk), padding: 18 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 9, background: tk.goldBg, border: `1px solid ${GOLD}33`, display: 'grid', placeItems: 'center', color: GOLD, flexShrink: 0 }}><ShieldCheck size={17} strokeWidth={1.75} /></div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600, color: tk.t1 }}>{c.title}</div>
+                  <div style={{ fontSize: 12.5, color: tk.t3, marginTop: 3 }}>{c.desc}</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, borderTop: `1px solid ${tk.line}`, marginTop: 4 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: tk.t3 }}><Clock size={12} strokeWidth={1.75} />Entrega en {c.time}</span>
+                {done ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 6, background: 'rgba(34,197,94,.1)', color: '#22c55e', fontSize: 12, fontWeight: 600 }}>
+                    <Check size={12} strokeWidth={2.5} />Solicitado
+                  </span>
+                ) : (
+                  <button onClick={() => handleSolicitar(c.title)} style={{ appearance: 'none', border: `1px solid ${GOLD}55`, cursor: 'pointer', background: tk.goldBg, color: GOLD, borderRadius: 6, padding: '6px 12px', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <ChevronRight size={12} strokeWidth={2} />Solicitar
+                  </button>
+                )}
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, borderTop: `1px solid ${tk.line}`, marginTop: 4 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: tk.t3 }}><Clock size={12} strokeWidth={1.75} />Entrega en {c.time}</span>
-              <button style={{ appearance: 'none', border: `1px solid ${GOLD}55`, cursor: 'pointer', background: tk.goldBg, color: GOLD, borderRadius: 6, padding: '6px 12px', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
-                <ChevronRight size={12} strokeWidth={2} />Solicitar
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {/* Historial de solicitudes */}
+      {history.length > 0 && (
+        <div style={{ ...cardStyle(tk), padding: 0, overflow: 'hidden', marginTop: 18 }}>
+          <div style={{ padding: '13px 20px', borderBottom: `1px solid ${tk.line}`, fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600, color: tk.t1 }}>
+            Historial de solicitudes
+          </div>
+          {history.map((h, i) => {
+            const st = estadoStyle(h.estado);
+            return (
+              <div key={h.id} style={{ padding: '13px 20px', borderBottom: i < history.length - 1 ? `1px solid ${tk.line}` : undefined, display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 12, alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: 13.5, color: tk.t1, fontWeight: 500 }}>{h.tipo}</div>
+                  <div style={{ fontSize: 11.5, color: tk.t3, marginTop: 2 }}>
+                    {h.empleado} · {new Date(h.fechaSolicitud).toLocaleDateString('es-CO')}
+                  </div>
+                </div>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 99, background: st.bg, color: st.c, fontSize: 11.5, fontWeight: 600 }}>
+                  <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'currentColor' }} />{st.label}
+                </span>
+                <button style={{ appearance: 'none', border: 0, cursor: 'pointer', background: 'transparent', color: tk.t3 }}>
+                  <Download size={14} strokeWidth={1.75} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -576,31 +632,65 @@ function AdminResumen({ tk }: { tk: Tk }) {
   );
 }
 
-function AdminSolicitudes({ tk }: { tk: Tk }) {
-  const pending = [
-    { empleado: 'Mateo Rivera',   tipo: 'Solicitud de vacaciones',  fecha: '30/06/2026', dias: '5 días',  estado: 'pendiente' as const },
-    { empleado: 'Laura Gómez',    tipo: 'Permiso por calamidad',    fecha: '28/06/2026', dias: '2 días',  estado: 'pendiente' as const },
-    { empleado: 'Carlos Méndez',  tipo: 'Certificado laboral',      fecha: '25/06/2026', dias: '—',       estado: 'pendiente' as const },
-  ];
+const SOL_LS_KEY = '9a_solicitudes_v1';
+type SolicitudEstado = 'pendiente' | 'aprobado' | 'rechazado';
+interface Solicitud { id: string; empleado: string; tipo: string; fecha: string; dias: string; estado: SolicitudEstado; }
+
+function loadSolicitudes(): Solicitud[] {
+  try { return JSON.parse(localStorage.getItem(SOL_LS_KEY) ?? 'null') ?? [
+    { id: 's1', empleado: 'Mateo Rivera',  tipo: 'Solicitud de vacaciones', fecha: '30/06/2026', dias: '5 días', estado: 'pendiente' },
+    { id: 's2', empleado: 'Laura Gómez',   tipo: 'Permiso por calamidad',   fecha: '28/06/2026', dias: '2 días', estado: 'pendiente' },
+    { id: 's3', empleado: 'Carlos Méndez', tipo: 'Certificado laboral',     fecha: '25/06/2026', dias: '—',      estado: 'pendiente' },
+  ]; } catch { return []; }
+}
+function saveSolicitudes(list: Solicitud[]) {
+  try { localStorage.setItem(SOL_LS_KEY, JSON.stringify(list)); } catch {}
+}
+
+function AdminSolicitudes({ tk, onNotify }: { tk: Tk; onNotify: (msg: string, tipo: 'success' | 'info') => void }) {
+  const [solicitudes, setSolicitudes] = useState<Solicitud[]>(loadSolicitudes);
+
+  function handle(id: string, accion: 'aprobado' | 'rechazado') {
+    const updated = solicitudes.map(s => s.id === id ? { ...s, estado: accion } : s);
+    setSolicitudes(updated);
+    saveSolicitudes(updated);
+    const sol = solicitudes.find(s => s.id === id);
+    if (sol) {
+      const msg = accion === 'aprobado'
+        ? `✓ Solicitud de ${sol.empleado} aprobada — ${sol.tipo}`
+        : `✗ Solicitud de ${sol.empleado} rechazada — ${sol.tipo}`;
+      onNotify(msg, accion === 'aprobado' ? 'success' : 'info');
+    }
+  }
+
+  const pendientes = solicitudes.filter(s => s.estado === 'pendiente').length;
+
   return (
     <div>
       <ModTitle tk={tk} title="Solicitudes" subtitle="Revisión y aprobación de solicitudes del equipo"
-        action={<span style={{ padding: '4px 10px', borderRadius: 99, background: `rgba(201,168,76,.15)`, color: GOLD, fontSize: 13, fontWeight: 700 }}>3 pendientes</span>}
+        action={pendientes > 0
+          ? <span style={{ padding: '4px 10px', borderRadius: 99, background: `rgba(201,168,76,.15)`, color: GOLD, fontSize: 13, fontWeight: 700 }}>{pendientes} pendiente{pendientes !== 1 ? 's' : ''}</span>
+          : <span style={{ padding: '4px 10px', borderRadius: 99, background: 'rgba(34,197,94,.1)', color: '#22c55e', fontSize: 13, fontWeight: 600 }}>Todo revisado</span>}
       />
       <div style={{ ...cardStyle(tk), padding: 0, overflow: 'hidden' }}>
         <div style={{ padding: '13px 20px', borderBottom: `1px solid ${tk.line}`, display: 'grid', gridTemplateColumns: '1fr 1fr auto auto auto', gap: 12 }}>
-          {['Empleado', 'Solicitud', 'Fecha', 'Duración', 'Estado'].map(h => <span key={h} style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase' as const, color: tk.t3 }}>{h}</span>)}
+          {['Empleado', 'Solicitud', 'Fecha', 'Duración', 'Acción'].map(h => <span key={h} style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase' as const, color: tk.t3 }}>{h}</span>)}
         </div>
-        {pending.map((r, i) => (
-          <div key={i} style={{ padding: '14px 20px', borderBottom: i < pending.length - 1 ? `1px solid ${tk.line}` : undefined, display: 'grid', gridTemplateColumns: '1fr 1fr auto auto auto', gap: 12, alignItems: 'center' }}>
+        {solicitudes.map((r, i) => (
+          <div key={r.id} style={{ padding: '14px 20px', borderBottom: i < solicitudes.length - 1 ? `1px solid ${tk.line}` : undefined, display: 'grid', gridTemplateColumns: '1fr 1fr auto auto auto', gap: 12, alignItems: 'center' }}>
             <span style={{ fontSize: 13.5, color: tk.t1, fontWeight: 500 }}>{r.empleado}</span>
             <span style={{ fontSize: 13, color: tk.t2 }}>{r.tipo}</span>
             <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: tk.t3 }}>{r.fecha}</span>
             <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: tk.t3 }}>{r.dias}</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <StatusBadge status={r.estado} />
-              <button style={{ appearance: 'none', border: 0, cursor: 'pointer', background: `rgba(74,212,110,.1)`, color: '#4AD46E', borderRadius: 5, padding: '4px 8px', fontSize: 11.5, fontWeight: 600 }}>✓ Aprobar</button>
-              <button style={{ appearance: 'none', border: 0, cursor: 'pointer', background: `rgba(212,74,74,.1)`, color: '#D44A4A', borderRadius: 5, padding: '4px 8px', fontSize: 11.5, fontWeight: 600 }}>✗ Rechazar</button>
+              {r.estado !== 'pendiente' ? (
+                <StatusBadge status={r.estado} />
+              ) : (
+                <>
+                  <button onClick={() => handle(r.id, 'aprobado')} style={{ appearance: 'none', border: 0, cursor: 'pointer', background: `rgba(74,212,110,.1)`, color: '#4AD46E', borderRadius: 5, padding: '4px 10px', fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap' }}>✓ Aprobar</button>
+                  <button onClick={() => handle(r.id, 'rechazado')} style={{ appearance: 'none', border: 0, cursor: 'pointer', background: `rgba(212,74,74,.1)`, color: '#D44A4A', borderRadius: 5, padding: '4px 10px', fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap' }}>✗ Rechazar</button>
+                </>
+              )}
             </div>
           </div>
         ))}
@@ -662,7 +752,13 @@ export default function GestionOperativaPage() {
   const [adminShowPass,  setAdminShowPass]  = useState(false);
   const [adminError,     setAdminError]     = useState('');
   const [adminLoading,   setAdminLoading]   = useState(false);
+  const [toast, setToast] = useState<{ msg: string; tipo: 'success' | 'info' } | null>(null);
   const today = useMemo(() => new Date(), []);
+
+  function handleNotify(msg: string, tipo: 'success' | 'info') {
+    setToast({ msg, tipo });
+    setTimeout(() => setToast(null), 4000);
+  }
 
   function handleRoleClick(r: Role) {
     if (r === 'admin' && !adminAuthed) {
@@ -711,6 +807,22 @@ export default function GestionOperativaPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+
+      {/* ── Toast de confirmación ── */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
+          padding: '12px 18px', borderRadius: 10,
+          background: toast.tipo === 'success' ? 'rgba(34,197,94,.15)' : 'rgba(59,130,246,.15)',
+          border: `1px solid ${toast.tipo === 'success' ? 'rgba(34,197,94,.4)' : 'rgba(59,130,246,.4)'}`,
+          color: toast.tipo === 'success' ? '#22c55e' : '#3b82f6',
+          fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600,
+          boxShadow: '0 4px 20px rgba(0,0,0,.3)',
+          maxWidth: 380,
+        }}>
+          {toast.msg}
+        </div>
+      )}
 
       {/* ── Page header ── */}
       <div style={{ background: `linear-gradient(135deg,${NAVY950} 0%,${NAVY900} 100%)`, borderRadius: 12, padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', position: 'relative', overflow: 'hidden' }}>
@@ -765,7 +877,7 @@ export default function GestionOperativaPage() {
         ) : (
           <>
             {admMod === 'resumen'           && <AdminResumen      tk={tk} />}
-            {admMod === 'solicitudes_adm'   && <AdminSolicitudes  tk={tk} />}
+            {admMod === 'solicitudes_adm'   && <AdminSolicitudes  tk={tk} onNotify={handleNotify} />}
             {admMod === 'incapacidades_adm' && <AdminGeneric tk={tk} title="Incapacidades" icon={Activity}  sub="Gestión centralizada de licencias médicas del equipo. Disponible próximamente." />}
             {admMod === 'documentos_adm'    && <AdminGeneric tk={tk} title="Documentos"    icon={FolderOpen} sub="Repositorio de documentos laborales de todos los empleados. Disponible próximamente." />}
             {admMod === 'empleados'         && <AdminEmpleados    tk={tk} />}
