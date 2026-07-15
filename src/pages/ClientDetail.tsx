@@ -2,10 +2,28 @@ import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { clientsMap } from '../data/clients';
+import type { Responsables, Caracterizacion } from '../data/clients';
 import { obligaciones, obligacionesMap } from '../data/obligaciones';
 import { getVencimientos } from '../lib/getVencimientos';
 import type { Estado } from '../lib/getVencimientos';
 import { StatusBadge } from '../components/StatusBadge';
+import { Pencil, Check, X } from 'lucide-react';
+
+const META_KEY = '9a_client_meta_v1';
+
+interface ClientMeta {
+  representanteLegal?: string;
+  responsables?: Responsables;
+  caracterizacion?: Caracterizacion;
+}
+
+function loadMeta(): Record<string, ClientMeta> {
+  try { return JSON.parse(localStorage.getItem(META_KEY) ?? '{}'); }
+  catch { return {}; }
+}
+function saveMeta(data: Record<string, ClientMeta>) {
+  try { localStorage.setItem(META_KEY, JSON.stringify(data)); } catch {}
+}
 
 const ESTADOS: Estado[] = ['pendiente', 'proximo', 'presentado', 'vencido'];
 
@@ -16,6 +34,37 @@ export default function ClientDetail() {
   const client = id ? clientsMap[id] : null;
 
   const [localEstados, setLocalEstados] = useState<Record<string, { estado: Estado; fecha: string; nota: string }>>({});
+
+  // Responsables + caracterización — persisted in localStorage
+  const allMeta = loadMeta();
+  const savedMeta: ClientMeta = id ? (allMeta[id] ?? {}) : {};
+  const merged: ClientMeta = {
+    representanteLegal: savedMeta.representanteLegal ?? client?.representanteLegal,
+    responsables: { ...client?.responsables, ...savedMeta.responsables },
+    caracterizacion: { ...client?.caracterizacion, ...savedMeta.caracterizacion },
+  };
+
+  const [editingMeta, setEditingMeta] = useState(false);
+  const [draftMeta, setDraftMeta] = useState<ClientMeta>({});
+
+  function startEdit() {
+    setDraftMeta(JSON.parse(JSON.stringify(merged)));
+    setEditingMeta(true);
+  }
+  function cancelEdit() { setEditingMeta(false); setDraftMeta({}); }
+  function saveDraft() {
+    if (!id) return;
+    const updated = { ...allMeta, [id]: draftMeta };
+    saveMeta(updated);
+    setEditingMeta(false);
+    setDraftMeta({});
+  }
+  function setResp(key: keyof Responsables, val: string) {
+    setDraftMeta(p => ({ ...p, responsables: { ...p.responsables, [key]: val } }));
+  }
+  function setCarac(key: keyof Caracterizacion, val: string | boolean) {
+    setDraftMeta(p => ({ ...p, caracterizacion: { ...p.caracterizacion, [key]: val } }));
+  }
 
   const vencimientos = useMemo(() => {
     if (!client) return [];
@@ -72,7 +121,7 @@ export default function ClientDetail() {
         </div>
       </div>
 
-      {/* Info */}
+      {/* Info básica */}
       <div className="bg-navy-800/50 border border-white/5 rounded-xl p-4 grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
         {client.contacto && <div><p className="text-cream-200/40 text-xs">{t('cliente.contacto')}</p><p className="text-cream-100">{client.contacto}</p></div>}
         {client.email && <div><p className="text-cream-200/40 text-xs">{t('cliente.email')}</p><p className="text-cream-100">{client.email}</p></div>}
@@ -81,6 +130,168 @@ export default function ClientDetail() {
         {client.fechaInicioVencimientos && (
           <div><p className="text-cream-200/40 text-xs">Vencimientos desde</p><p className="text-cream-100">{client.fechaInicioVencimientos}</p></div>
         )}
+      </div>
+
+      {/* Responsables y caracterización */}
+      <div className="bg-navy-800/50 border border-white/5 rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+          <h2 className="text-cream-100 text-sm font-semibold">Responsables y caracterización</h2>
+          {!editingMeta ? (
+            <button onClick={startEdit} className="flex items-center gap-1.5 text-gold-400/60 hover:text-gold-400 text-xs transition-colors">
+              <Pencil size={11} strokeWidth={2} /> Editar
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button onClick={saveDraft} className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs transition-colors">
+                <Check size={12} strokeWidth={2.5} /> Guardar
+              </button>
+              <button onClick={cancelEdit} className="flex items-center gap-1 text-cream-200/40 hover:text-cream-100 text-xs transition-colors">
+                <X size={12} strokeWidth={2} /> Cancelar
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Responsables */}
+          <div>
+            <p className="text-cream-200/40 text-[10px] font-semibold tracking-widest uppercase mb-3">Equipo responsable</p>
+            <div className="space-y-2.5">
+              {([
+                { key: 'representanteLegal', label: 'Representante legal', top: true },
+                { key: 'contador',           label: 'Contador' },
+                { key: 'coordinador',        label: 'Coordinador' },
+                { key: 'senior',             label: 'Contador senior' },
+                { key: 'junior',             label: 'Auxiliar contable' },
+                { key: 'revisorFiscal',      label: 'Revisor fiscal' },
+                { key: 'representanteFiscal', label: 'Representante fiscal' },
+              ] as { key: string; label: string; top?: boolean }[]).map(({ key, label, top }) => {
+                const value = top
+                  ? (editingMeta ? draftMeta.representanteLegal : merged.representanteLegal)
+                  : (editingMeta
+                    ? (draftMeta.responsables as Record<string, string> | undefined)?.[key]
+                    : (merged.responsables as Record<string, string> | undefined)?.[key]);
+                return (
+                  <div key={key} className="flex items-center justify-between gap-3">
+                    <span className="text-cream-200/40 text-xs w-36 shrink-0">{label}</span>
+                    {editingMeta ? (
+                      <input
+                        value={value ?? ''}
+                        onChange={e => top
+                          ? setDraftMeta(p => ({ ...p, representanteLegal: e.target.value }))
+                          : setResp(key as keyof Responsables, e.target.value)
+                        }
+                        placeholder="—"
+                        className="flex-1 bg-navy-900 border border-white/10 rounded px-2 py-1 text-xs text-cream-100 placeholder-cream-200/20 focus:outline-none focus:border-gold-500/40"
+                      />
+                    ) : (
+                      <span className="text-cream-100 text-xs flex-1 text-right">{value || <span className="text-cream-200/20">—</span>}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Caracterización */}
+          <div>
+            <p className="text-cream-200/40 text-[10px] font-semibold tracking-widest uppercase mb-3">Caracterización</p>
+            <div className="space-y-2.5">
+              {/* Tipo de entidad */}
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-cream-200/40 text-xs w-36 shrink-0">Tipo de entidad</span>
+                {editingMeta ? (
+                  <select
+                    value={draftMeta.caracterizacion?.tipoEntidad ?? ''}
+                    onChange={e => setCarac('tipoEntidad', e.target.value)}
+                    className="flex-1 bg-navy-900 border border-white/10 rounded px-2 py-1 text-xs text-cream-100 focus:outline-none focus:border-gold-500/40"
+                  >
+                    <option value="">—</option>
+                    {['SAS', 'SAS BIC', 'SA', 'Ltda', 'ESAL', 'EP', 'Persona Natural'].map(o => <option key={o}>{o}</option>)}
+                  </select>
+                ) : (
+                  <span className="text-cream-100 text-xs flex-1 text-right">{merged.caracterizacion?.tipoEntidad || <span className="text-cream-200/20">—</span>}</span>
+                )}
+              </div>
+              {/* Régimen */}
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-cream-200/40 text-xs w-36 shrink-0">Régimen</span>
+                {editingMeta ? (
+                  <select
+                    value={draftMeta.caracterizacion?.regimen ?? ''}
+                    onChange={e => setCarac('regimen', e.target.value)}
+                    className="flex-1 bg-navy-900 border border-white/10 rounded px-2 py-1 text-xs text-cream-100 focus:outline-none focus:border-gold-500/40"
+                  >
+                    <option value="">—</option>
+                    {['Común', 'Simplificado', 'Especial', 'Simple'].map(o => <option key={o}>{o}</option>)}
+                  </select>
+                ) : (
+                  <span className="text-cream-100 text-xs flex-1 text-right">{merged.caracterizacion?.regimen || <span className="text-cream-200/20">—</span>}</span>
+                )}
+              </div>
+              {/* Gran contribuyente */}
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-cream-200/40 text-xs w-36 shrink-0">Gran contribuyente</span>
+                {editingMeta ? (
+                  <select
+                    value={draftMeta.caracterizacion?.granContribuyente ? 'Sí' : 'No'}
+                    onChange={e => setCarac('granContribuyente', e.target.value === 'Sí')}
+                    className="flex-1 bg-navy-900 border border-white/10 rounded px-2 py-1 text-xs text-cream-100 focus:outline-none focus:border-gold-500/40"
+                  >
+                    <option>No</option><option>Sí</option>
+                  </select>
+                ) : (
+                  <span className={`text-xs flex-1 text-right ${merged.caracterizacion?.granContribuyente ? 'text-amber-400' : 'text-cream-200/40'}`}>
+                    {merged.caracterizacion?.granContribuyente ? 'Sí' : 'No'}
+                  </span>
+                )}
+              </div>
+              {/* Superintendencia */}
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-cream-200/40 text-xs w-36 shrink-0">Superintendencia</span>
+                {editingMeta ? (
+                  <input
+                    value={draftMeta.caracterizacion?.superintendencia ?? ''}
+                    onChange={e => setCarac('superintendencia', e.target.value)}
+                    placeholder="—"
+                    className="flex-1 bg-navy-900 border border-white/10 rounded px-2 py-1 text-xs text-cream-100 placeholder-cream-200/20 focus:outline-none focus:border-gold-500/40"
+                  />
+                ) : (
+                  <span className="text-cream-100 text-xs flex-1 text-right">{merged.caracterizacion?.superintendencia || <span className="text-cream-200/20">—</span>}</span>
+                )}
+              </div>
+              {/* Composición accionaria */}
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-cream-200/40 text-xs w-36 shrink-0">Comp. accionaria</span>
+                {editingMeta ? (
+                  <input
+                    value={draftMeta.caracterizacion?.composicionAccionaria ?? ''}
+                    onChange={e => setCarac('composicionAccionaria', e.target.value)}
+                    placeholder="—"
+                    className="flex-1 bg-navy-900 border border-white/10 rounded px-2 py-1 text-xs text-cream-100 placeholder-cream-200/20 focus:outline-none focus:border-gold-500/40"
+                  />
+                ) : (
+                  <span className="text-cream-100 text-xs flex-1 text-right">{merged.caracterizacion?.composicionAccionaria || <span className="text-cream-200/20">—</span>}</span>
+                )}
+              </div>
+              {/* Registro proponentes */}
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-cream-200/40 text-xs w-36 shrink-0">Reg. proponentes</span>
+                {editingMeta ? (
+                  <select
+                    value={draftMeta.caracterizacion?.registroProponentes ? 'Sí' : 'No'}
+                    onChange={e => setCarac('registroProponentes', e.target.value === 'Sí')}
+                    className="flex-1 bg-navy-900 border border-white/10 rounded px-2 py-1 text-xs text-cream-100 focus:outline-none focus:border-gold-500/40"
+                  >
+                    <option>No</option><option>Sí</option>
+                  </select>
+                ) : (
+                  <span className="text-cream-100 text-xs flex-1 text-right">{merged.caracterizacion?.registroProponentes ? 'Sí' : 'No'}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Obligaciones */}

@@ -1,3 +1,21 @@
+export interface Responsables {
+  contador?: string;
+  coordinador?: string;
+  senior?: string;
+  junior?: string;
+  revisorFiscal?: string;
+  representanteFiscal?: string;
+}
+
+export interface Caracterizacion {
+  tipoEntidad?: string;
+  regimen?: string;
+  granContribuyente?: boolean;
+  superintendencia?: string;
+  composicionAccionaria?: string;
+  registroProponentes?: boolean;
+}
+
 export interface Client {
   id: string;
   nombre: string;
@@ -11,6 +29,9 @@ export interface Client {
   notas?: string;
   fechaInicioVencimientos?: string;
   esReal?: boolean;
+  representanteLegal?: string;
+  responsables?: Responsables;
+  caracterizacion?: Caracterizacion;
 }
 
 export const clients: Client[] = [
@@ -20,13 +41,24 @@ export const clients: Client[] = [
     nombre: '9ALLIANCE SAS BIC',
     nit: '900.524.213-6',
     contacto: '(por confirmar)',
-    email: '(por confirmar)',
+    email: 'info@9alliance.co',
     telefono: '(por confirmar)',
-    sector: 'Servicios jurídicos',
+    sector: 'Servicios jurídicos y contables',
     ultimoDigitoNit: '6',
     obligaciones: ['renta_pj', 'iva_bimestral', 'retencion', 'pila'],
     fechaInicioVencimientos: '2026-06-01',
     esReal: true,
+    representanteLegal: '(por confirmar)',
+    responsables: {
+      contador: 'Felipe Serna',
+      coordinador: '(por confirmar)',
+    },
+    caracterizacion: {
+      tipoEntidad: 'SAS BIC',
+      regimen: 'Común',
+      granContribuyente: false,
+      superintendencia: 'Sociedades',
+    },
   },
   {
     id: 'c002',
@@ -40,6 +72,16 @@ export const clients: Client[] = [
     obligaciones: ['renta_pj', 'iva_bimestral', 'retencion', 'pila'],
     fechaInicioVencimientos: '2026-06-01',
     esReal: true,
+    representanteLegal: '(por confirmar)',
+    responsables: {
+      contador: 'Felipe Serna',
+      coordinador: '(por confirmar)',
+    },
+    caracterizacion: {
+      tipoEntidad: 'SAS BIC',
+      regimen: 'Común',
+      granContribuyente: false,
+    },
   },
   // ── Empresas demo (datos ficticios) ─────────────────────────────────────
   {
