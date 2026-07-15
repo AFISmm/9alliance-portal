@@ -7,7 +7,13 @@ import { obligaciones, obligacionesMap } from '../data/obligaciones';
 import { getVencimientos } from '../lib/getVencimientos';
 import type { Estado } from '../lib/getVencimientos';
 import { StatusBadge } from '../components/StatusBadge';
-import { Pencil, Check, X } from 'lucide-react';
+import { Pencil, Check, X, Bell, BellOff, ShieldCheck, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  getAlertConfig, saveAlertConfig, DIAS_OPCIONES,
+  loadComplianceActions, saveComplianceActions,
+  clearNotifiedForVencimiento,
+} from '../data/alertConfig';
+import type { AccionCompliance } from '../data/alertConfig';
 
 const META_KEY = '9a_client_meta_v1';
 
@@ -64,6 +70,56 @@ export default function ClientDetail() {
   }
   function setCarac(key: keyof Caracterizacion, val: string | boolean) {
     setDraftMeta(p => ({ ...p, caracterizacion: { ...p.caracterizacion, [key]: val } }));
+  }
+
+  // ── Configuración de alertas ─────────────────────────────────────────────
+  const [alertCfg, setAlertCfg] = useState(() => id ? getAlertConfig(id) : { habilitado: true, anticipacionDias: [30, 15, 5] });
+
+  function toggleAlerta() {
+    const next = { ...alertCfg, habilitado: !alertCfg.habilitado };
+    setAlertCfg(next);
+    if (id) saveAlertConfig(id, next);
+  }
+  function toggleDia(d: number) {
+    const dias = alertCfg.anticipacionDias.includes(d)
+      ? alertCfg.anticipacionDias.filter(x => x !== d)
+      : [...alertCfg.anticipacionDias, d].sort((a, b) => b - a);
+    const next = { ...alertCfg, anticipacionDias: dias };
+    setAlertCfg(next);
+    if (id) saveAlertConfig(id, next);
+  }
+
+  // ── Acciones de compliance ────────────────────────────────────────────────
+  const [complianceActions, setComplianceActions] = useState<AccionCompliance[]>(() => loadComplianceActions());
+  const [expandedVenc, setExpandedVenc] = useState<string | null>(null);
+  const [registeringFor, setRegisteringFor] = useState<string | null>(null);
+  const [draftAccion, setDraftAccion] = useState({ responsable: '', nota: '' });
+
+  function getActionsFor(vId: string) {
+    return complianceActions.filter(a => a.vencimientoId === vId);
+  }
+
+  function saveAccion(vId: string, obligacionId: string, periodo: string) {
+    if (!draftAccion.responsable.trim() || !id) return;
+    const newAction: AccionCompliance = {
+      id: `ac_${Date.now()}`,
+      vencimientoId: vId,
+      clienteId: id,
+      obligacionId,
+      periodo,
+      responsable: draftAccion.responsable.trim(),
+      nota: draftAccion.nota.trim(),
+      timestamp: Date.now(),
+    };
+    const updated = [...complianceActions, newAction];
+    setComplianceActions(updated);
+    saveComplianceActions(updated);
+    // Marcar como presentado automáticamente
+    handleChange(vId, 'estado', 'presentado');
+    // Limpiar la deduplicación para que no re-alerte
+    clearNotifiedForVencimiento(vId);
+    setRegisteringFor(null);
+    setDraftAccion({ responsable: '', nota: '' });
   }
 
   const vencimientos = useMemo(() => {
@@ -294,6 +350,45 @@ export default function ClientDetail() {
         </div>
       </div>
 
+      {/* Configuración de alertas */}
+      <div className="bg-navy-800/50 border border-white/5 rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {alertCfg.habilitado
+              ? <Bell size={14} strokeWidth={1.8} className="text-gold-400" />
+              : <BellOff size={14} strokeWidth={1.8} className="text-cream-200/30" />}
+            <h2 className="text-cream-100 text-sm font-semibold">Configuración de alertas</h2>
+          </div>
+          <button
+            onClick={toggleAlerta}
+            className={`text-xs px-3 py-1 rounded-full font-semibold transition-colors ${
+              alertCfg.habilitado
+                ? 'bg-gold-500/15 text-gold-400 hover:bg-gold-500/25'
+                : 'bg-white/5 text-cream-200/40 hover:bg-white/10'
+            }`}>
+            {alertCfg.habilitado ? 'Habilitado' : 'Deshabilitado'}
+          </button>
+        </div>
+        {alertCfg.habilitado && (
+          <div className="px-4 py-3 flex flex-wrap items-center gap-3">
+            <span className="text-cream-200/40 text-xs">Alertar con anticipación de:</span>
+            {DIAS_OPCIONES.map(d => {
+              const active = alertCfg.anticipacionDias.includes(d);
+              return (
+                <button key={d} onClick={() => toggleDia(d)}
+                  className={`text-xs px-2.5 py-1 rounded-full font-semibold transition-colors ${
+                    active
+                      ? 'bg-gold-500/15 text-gold-400 border border-gold-500/30'
+                      : 'bg-white/5 text-cream-200/30 border border-white/8 hover:bg-white/10'
+                  }`}>
+                  {d}d
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Obligaciones */}
       <div>
         <h2 className="text-cream-100 font-semibold mb-3">{t('cliente.vencimientos')}</h2>
@@ -355,6 +450,79 @@ export default function ClientDetail() {
                         className="w-full bg-navy-900 border border-white/10 rounded-lg px-2 py-1.5 text-sm text-cream-100 placeholder-cream-200/20 focus:outline-none focus:border-gold-500/50"
                       />
                     </div>
+                  </div>
+
+                  {/* ── Acciones de compliance ─────────────────────────────── */}
+                  <div className="border-t border-white/5 pt-3 mt-1">
+                    {/* Acciones registradas */}
+                    {getActionsFor(v.id).length > 0 && (
+                      <div className="mb-2">
+                        <button
+                          onClick={() => setExpandedVenc(expandedVenc === v.id ? null : v.id)}
+                          className="flex items-center gap-1.5 text-emerald-400/80 text-xs font-semibold mb-1.5"
+                        >
+                          <ShieldCheck size={12} strokeWidth={2} />
+                          {getActionsFor(v.id).length} acción{getActionsFor(v.id).length !== 1 ? 'es' : ''} registrada{getActionsFor(v.id).length !== 1 ? 's' : ''}
+                          {expandedVenc === v.id ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                        </button>
+                        {expandedVenc === v.id && (
+                          <div className="space-y-1.5 mb-2">
+                            {getActionsFor(v.id).map(a => (
+                              <div key={a.id} className="bg-emerald-500/5 border border-emerald-500/15 rounded-lg px-3 py-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-emerald-300 text-xs font-semibold">{a.responsable}</span>
+                                  <span className="text-cream-200/30 text-[10px]">
+                                    {new Date(a.timestamp).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                                {a.nota && <p className="text-cream-200/55 text-xs mt-0.5">{a.nota}</p>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Formulario registrar acción */}
+                    {registeringFor === v.id ? (
+                      <div className="bg-white/3 border border-white/8 rounded-lg p-3 space-y-2">
+                        <p className="text-cream-200/50 text-[10px] font-semibold uppercase tracking-wide">Registrar acción ejecutada</p>
+                        <input
+                          placeholder="Responsable *"
+                          value={draftAccion.responsable}
+                          onChange={e => setDraftAccion(p => ({ ...p, responsable: e.target.value }))}
+                          className="w-full bg-navy-900 border border-white/10 rounded px-2 py-1.5 text-xs text-cream-100 placeholder-cream-200/20 focus:outline-none focus:border-gold-500/40"
+                        />
+                        <input
+                          placeholder="Nota o evidencia (opcional)"
+                          value={draftAccion.nota}
+                          onChange={e => setDraftAccion(p => ({ ...p, nota: e.target.value }))}
+                          className="w-full bg-navy-900 border border-white/10 rounded px-2 py-1.5 text-xs text-cream-100 placeholder-cream-200/20 focus:outline-none focus:border-gold-500/40"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => saveAccion(v.id, v.obligacionId, v.periodo)}
+                            disabled={!draftAccion.responsable.trim()}
+                            className="flex items-center gap-1.5 bg-gold-500 hover:bg-gold-400 disabled:opacity-40 text-navy-900 text-xs font-bold px-3 py-1.5 rounded transition-colors"
+                          >
+                            <Check size={11} strokeWidth={2.5} /> Guardar y marcar como presentado
+                          </button>
+                          <button
+                            onClick={() => { setRegisteringFor(null); setDraftAccion({ responsable: '', nota: '' }); }}
+                            className="text-cream-200/40 hover:text-cream-100 text-xs px-2 py-1.5 rounded transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setRegisteringFor(v.id)}
+                        className="flex items-center gap-1.5 text-gold-400/60 hover:text-gold-400 text-xs transition-colors"
+                      >
+                        <Plus size={12} strokeWidth={2.5} /> Registrar acción ejecutada
+                      </button>
+                    )}
                   </div>
                 </div>
               );

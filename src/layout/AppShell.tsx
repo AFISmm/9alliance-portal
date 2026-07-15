@@ -5,9 +5,11 @@ import { CompanyFooter }            from '../components/CompanyFooter';
 import Chatbot                      from '../components/Chatbot';
 import { NotificationPanel }        from '../components/NotificationPanel';
 import { useLayout }                from '../context/LayoutContext';
+import { useAlertCheck }            from '../hooks/useAlertCheck';
 
 export function AppShell() {
   const { sidebarCollapsed, setSidebarCollapsed, isMobile } = useLayout();
+  useAlertCheck();
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', width: '100%', position: 'relative' }}>
